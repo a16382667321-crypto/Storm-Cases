@@ -1,0 +1,1440 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>STORM CASES - Полная версия</title>
+    <!-- ============================================================
+         STORM CASES - Frontend Specification
+         Версия: 2.0 (расширенная)
+         Автор: ИИ-разработчик
+         Описание: Этот файл является эталоном интерфейса Telegram WebApp.
+         Он определяет все экраны, модальные окна, API-вызовы и структуру данных.
+         Backend-разработчики должны реализовать соответствующие эндпоинты.
+         ============================================================ -->
+    <style>
+        /* ===== ОСНОВНЫЕ ПЕРЕМЕННЫЕ И СТИЛИ ===== */
+        :root {
+            --bg: #08080f;
+            --bg2: #0e0e18;
+            --card: rgba(255, 255, 255, 0.04);
+            --card-hover: rgba(255, 255, 255, 0.08);
+            --border: rgba(255, 255, 255, 0.08);
+            --glass: rgba(20, 20, 35, 0.75);
+            --text: #e8e8f0;
+            --text2: #9a9ab0;
+            --accent: #7c3aed;
+            --accent2: #a855f7;
+            --gold: #ffd700;
+            --green: #22c55e;
+            --red: #ef4444;
+            --orange: #f97316;
+            --c-common: #9e9e9e;
+            --c-rare: #4fc3f7;
+            --c-epic: #ab47bc;
+            --c-legendary: #ffd700;
+            --c-mythic: #ff4081;
+            --radius: 14px;
+            --maxw: 420px;
+            --shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+            --transition: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        html, body { height: 100%; font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background: var(--bg); color: var(--text); overflow: hidden; user-select: none; -webkit-user-select: none; touch-action: manipulation; }
+        body { display: flex; justify-content: center; align-items: center; background: radial-gradient(ellipse at 50% 0%, #1a1a2e 0%, #08080f 60%); }
+        #app { width: 100%; max-width: var(--maxw); height: 100vh; max-height: 100dvh; display: flex; flex-direction: column; position: relative; overflow: hidden; background: var(--bg); border-radius: 0; box-shadow: var(--shadow); }
+        @media (min-width: 421px) { #app { border-radius: 20px; height: 90vh; max-height: 780px; } }
+        .screen { position: absolute; inset: 0; display: none; flex-direction: column; overflow-y: auto; overflow-x: hidden; padding: 16px; animation: fadeIn 0.3s ease; background: var(--bg); }
+        .screen.active { display: flex; }
+        .bottom-nav { position: absolute; bottom: 0; left: 0; right: 0; height: 60px; background: var(--glass); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border-top: 1px solid var(--border); display: flex; justify-content: space-around; align-items: center; z-index: 500; }
+        .nav-btn { background: none; border: none; color: var(--text2); font-size: 18px; cursor: pointer; padding: 8px 12px; border-radius: 8px; transition: var(--transition); display: flex; flex-direction: column; align-items: center; gap: 2px; font-weight: 600; }
+        .nav-btn.active { color: var(--accent2); background: rgba(124,58,237,0.15); }
+        .nav-btn span { font-size: 10px; letter-spacing: 0.5px; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.05); } }
+        @keyframes shake { 0%, 100% { transform: translateX(0); } 10%, 30%, 50%, 70%, 90% { transform: translateX(-8px); } 20%, 40%, 60%, 80% { transform: translateX(8px); } }
+        @keyframes spinReveal { 0% { transform: rotate(0deg) scale(0.5); opacity: 0; } 50% { transform: rotate(180deg) scale(1.1); opacity: 1; } 100% { transform: rotate(360deg) scale(1); } }
+        @keyframes glow { 0%, 100% { box-shadow: 0 0 15px rgba(124,58,237,0.5); } 50% { box-shadow: 0 0 35px rgba(168,85,247,0.8); } }
+        .shake { animation: shake 0.5s ease; }
+        .spin-reveal { animation: spinReveal 0.8s ease forwards; }
+        .glass { background: var(--glass); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow); }
+        .card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px 16px; transition: var(--transition); cursor: pointer; }
+        .card:hover { background: var(--card-hover); transform: translateY(-2px); }
+        .card:active { transform: scale(0.97); }
+        .btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 12px 20px; border-radius: 10px; border: none; font-size: 14px; font-weight: 600; cursor: pointer; transition: var(--transition); letter-spacing: 0.3px; background: var(--accent); color: #fff; width: 100%; text-align: center; user-select: none; }
+        .btn:hover { background: var(--accent2); transform: translateY(-1px); }
+        .btn:active { transform: scale(0.96); }
+        .btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+        .btn-secondary { background: rgba(255,255,255,0.08); color: var(--text); border: 1px solid var(--border); }
+        .btn-secondary:hover { background: rgba(255,255,255,0.15); }
+        .btn-danger { background: var(--red); }
+        .btn-danger:hover { background: #dc2626; }
+        .btn-success { background: var(--green); }
+        .btn-success:hover { background: #16a34a; }
+        .btn-sm { padding: 7px 12px; font-size: 12px; width: auto; border-radius: 7px; }
+        .btn-xs { padding: 5px 9px; font-size: 11px; width: auto; border-radius: 6px; }
+        input, textarea, select { width: 100%; padding: 12px 14px; border-radius: 10px; border: 1px solid var(--border); background: rgba(255,255,255,0.05); color: var(--text); font-size: 14px; outline: none; transition: var(--transition); font-family: inherit; }
+        input:focus, textarea:focus, select:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(124,58,237,0.2); }
+        input::placeholder, textarea::placeholder { color: #555; }
+        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.7); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); display: none; align-items: center; justify-content: center; z-index: 1000; padding: 16px; animation: fadeIn 0.2s ease; }
+        .modal-overlay.active { display: flex; }
+        .modal { background: var(--glass); backdrop-filter: blur(25px); -webkit-backdrop-filter: blur(25px); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; width: 100%; max-width: 380px; max-height: 85vh; overflow-y: auto; box-shadow: var(--shadow); animation: fadeIn 0.3s ease; position: relative; }
+        .modal h3 { margin-bottom: 14px; font-size: 18px; font-weight: 700; text-align: center; color: var(--text); }
+        .tab-bar { display: flex; gap: 6px; padding: 8px 0; border-bottom: 1px solid var(--border); margin-bottom: 12px; flex-wrap: nowrap; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+        .tab-btn { padding: 9px 14px; border-radius: 8px; border: none; background: transparent; color: var(--text2); font-size: 13px; font-weight: 600; cursor: pointer; white-space: nowrap; transition: var(--transition); flex-shrink: 0; }
+        .tab-btn.active { background: var(--accent); color: #fff; }
+        .tab-btn:hover:not(.active) { background: rgba(255,255,255,0.06); }
+        .rarity-common { color: var(--c-common); }
+        .rarity-rare { color: var(--c-rare); }
+        .rarity-epic { color: var(--c-epic); }
+        .rarity-legendary { color: var(--c-legendary); }
+        .rarity-mythic { color: var(--c-mythic); text-shadow: 0 0 10px rgba(255,64,129,0.6); }
+        .badge { display: inline-block; padding: 3px 8px; border-radius: 5px; font-size: 11px; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase; }
+        .badge-common { background: rgba(158,158,158,0.2); color: var(--c-common); }
+        .badge-rare { background: rgba(79,195,247,0.2); color: var(--c-rare); }
+        .badge-epic { background: rgba(171,71,188,0.25); color: var(--c-epic); }
+        .badge-legendary { background: rgba(255,215,0,0.2); color: var(--c-legendary); }
+        .badge-mythic { background: rgba(255,64,129,0.25); color: var(--c-mythic); animation: glow 2s infinite; }
+        .item-row { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 10px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05); margin-bottom: 6px; transition: var(--transition); cursor: pointer; }
+        .item-row:hover { background: rgba(255,255,255,0.06); }
+        .item-icon { width: 40px; height: 40px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 22px; flex-shrink: 0; background: rgba(255,255,255,0.05); }
+        .chat-message { padding: 8px 12px; border-radius: 12px; margin-bottom: 6px; max-width: 80%; word-wrap: break-word; font-size: 13px; line-height: 1.4; }
+        .chat-message.own { margin-left: auto; background: var(--accent); color: #fff; border-bottom-right-radius: 4px; }
+        .chat-message.other { margin-right: auto; background: rgba(255,255,255,0.1); color: var(--text); border-bottom-left-radius: 4px; }
+        .chat-message .sender { font-size: 11px; font-weight: 700; opacity: 0.7; margin-bottom: 2px; }
+        .chat-message .time { font-size: 10px; opacity: 0.5; text-align: right; margin-top: 3px; }
+        .scroll-y { overflow-y: auto; flex: 1; min-height: 0; -webkit-overflow-scrolling: touch; }
+        .flex-col { display: flex; flex-direction: column; gap: 8px; }
+        .flex-row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+        .mt-8 { margin-top: 8px; } .mt-12 { margin-top: 12px; } .mt-16 { margin-top: 16px; }
+        .mb-8 { margin-bottom: 8px; } .mb-12 { margin-bottom: 12px; }
+        .text-center { text-align: center; }
+        .text-sm { font-size: 12px; } .text-xs { font-size: 11px; }
+        .text-muted { color: var(--text2); }
+        .fw-bold { font-weight: 700; }
+        .w-100 { width: 100%; }
+        .gap-6 { gap: 6px; } .gap-8 { gap: 8px; } .gap-10 { gap: 10px; }
+        .hidden { display: none !important; }
+        .server-card { display: flex; align-items: center; justify-content: space-between; padding: 14px 16px; margin-bottom: 8px; border-radius: var(--radius); background: var(--card); border: 1px solid var(--border); cursor: pointer; transition: var(--transition); }
+        .server-card:hover { background: var(--card-hover); transform: translateX(4px); }
+        .server-online { display: flex; align-items: center; gap: 5px; font-size: 13px; color: var(--green); }
+        .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--green); display: inline-block; }
+        .dot-offline { background: var(--red); }
+        .case-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .case-card { padding: 14px; text-align: center; border-radius: var(--radius); background: var(--card); border: 1px solid var(--border); cursor: pointer; transition: var(--transition); position: relative; overflow: hidden; }
+        .case-card:hover { background: var(--card-hover); transform: translateY(-3px); }
+        .case-card .case-icon { font-size: 40px; margin-bottom: 8px; animation: pulse 2s infinite; }
+        .case-card .price { font-weight: 700; color: var(--gold); font-size: 14px; }
+        .filter-section { background: rgba(255,255,255,0.03); border-radius: 10px; padding: 12px; margin-bottom: 10px; display: none; }
+        .filter-section.active { display: block; animation: fadeIn 0.2s ease; }
+        .market-row { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 10px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05); margin-bottom: 6px; }
+        .case-animation-container { text-align: center; padding: 30px 10px; position: relative; }
+        .case-animation-container .case-box { font-size: 80px; animation: shake 0.5s infinite; }
+        .case-animation-container .reveal-item { font-size: 60px; display: none; animation: spinReveal 0.8s ease forwards; }
+        .stat-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.05); }
+        .stat-row:last-child { border-bottom: none; }
+        .toggle-switch { width: 48px; height: 26px; border-radius: 13px; background: rgba(255,255,255,0.15); cursor: pointer; position: relative; transition: var(--transition); flex-shrink: 0; }
+        .toggle-switch.active { background: var(--accent); }
+        .toggle-switch::after { content: ''; position: absolute; top: 3px; left: 3px; width: 20px; height: 20px; border-radius: 50%; background: #fff; transition: var(--transition); }
+        .toggle-switch.active::after { left: 25px; }
+        .empty-state { text-align: center; padding: 30px 15px; color: var(--text2); font-size: 14px; }
+        .empty-state .icon { font-size: 48px; margin-bottom: 10px; opacity: 0.5; }
+        ::-webkit-scrollbar { width: 4px; } ::-webkit-scrollbar-track { background: transparent; } ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 2px; }
+        .badge-donate { background: linear-gradient(45deg, #ffd700, #ff8c00); color: #000; }
+        .wheel-container { text-align: center; position: relative; }
+        .wheel-pointer { width: 0; height: 0; border-left: 15px solid transparent; border-right: 15px solid transparent; border-top: 25px solid var(--gold); margin: 0 auto; position: absolute; top: -10px; left: 50%; transform: translateX(-50%); z-index: 2; }
+        .clan-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px; margin-bottom: 8px; cursor: pointer; transition: var(--transition); }
+        .clan-card:hover { background: var(--card-hover); }
+        .progress-bar { background: rgba(255,255,255,0.1); border-radius: 5px; height: 6px; overflow: hidden; }
+        .progress-fill { height: 100%; background: var(--accent); border-radius: 5px; transition: width 0.3s; }
+        .slot-machine { display: flex; justify-content: center; gap: 10px; font-size: 40px; }
+        .slot-reel { background: var(--card); border-radius: 10px; padding: 20px; }
+        .auction-card { border-left: 3px solid var(--gold); }
+        .dialog-list { display: flex; flex-direction: column; gap: 6px; }
+        .dialog-item { display: flex; align-items: center; gap: 10px; padding: 12px; background: var(--card); border-radius: 10px; cursor: pointer; }
+        .dialog-item:hover { background: var(--card-hover); }
+        .unread-badge { background: var(--red); color: #fff; border-radius: 50%; padding: 2px 6px; font-size: 10px; }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <!-- Экран выбора сервера -->
+        <div class="screen active" id="screen-servers">
+            <div class="flex-col" style="height:100%;">
+                <div class="text-center mb-12">
+                    <h2 style="font-size:22px;font-weight:700;">Выбор сервера</h2>
+                    <p class="text-muted text-sm mt-8" id="servers-greeting"></p>
+                </div>
+                <div class="scroll-y flex-col gap-8" style="flex:1;">
+                    <div id="servers-list"></div>
+                </div>
+                <button class="btn btn-secondary mt-8" id="btn-logout" onclick="location.reload()">Выйти</button>
+            </div>
+        </div>
+
+        <!-- Основной экран с нижней навигацией -->
+        <div class="screen" id="screen-main">
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:4px 0 10px;border-bottom:1px solid var(--border);margin-bottom:10px;flex-wrap:wrap;gap:6px;">
+                <div class="flex-row gap-8">
+                    <span class="fw-bold" id="main-nick">Игрок</span>
+                    <span class="badge badge-common" id="main-server-badge">Server</span>
+                    <span class="badge badge-mythic hidden" id="admin-badge" style="cursor:pointer;" onclick="openAdminPanel()">👑 Админ</span>
+                </div>
+                <div class="flex-row gap-8">
+                    <span class="price-tag" id="main-balance" style="cursor:pointer;" title="Нажмите для пополнения">💰 0</span>
+                    <span class="badge badge-donate" style="cursor:pointer;" onclick="showDonateModal()">💎 Пополнить</span>
+                </div>
+            </div>
+            <div class="scroll-y" style="flex:1;" id="main-content"></div>
+            <!-- Нижняя навигация -->
+            <div class="bottom-nav">
+                <button class="nav-btn active" data-screen="cases"><span>🎁</span><span>Кейсы</span></button>
+                <button class="nav-btn" data-screen="inventory"><span>🎒</span><span>Инвентарь</span></button>
+                <button class="nav-btn" data-screen="market"><span>📦</span><span>Рынок</span></button>
+                <button class="nav-btn" data-screen="chat"><span>💬</span><span>Чат</span></button>
+                <button class="nav-btn" data-screen="profile"><span>👤</span><span>Профиль</span></button>
+                <button class="nav-btn" data-screen="more" id="nav-more"><span>☰</span><span>Ещё</span></button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Модальное окно -->
+    <div class="modal-overlay" id="modal-overlay">
+        <div class="modal" id="modal-content"></div>
+    </div>
+
+    <script>
+        // ============================================================
+        // STORM CASES - Frontend Logic
+        // ============================================================
+        const API_URL = 'http://localhost:8000';
+        let initData = '';
+        let currentState = null;
+        let currentUser = null;
+        let currentServerName = null;
+        let currentScreen = 'cases';
+        let caseOpeningInProgress = false;
+        let wheelSpinning = false;
+        let currentDialogId = null; // для личных сообщений
+
+        // Инициализация Telegram WebApp
+        try {
+            if (window.Telegram && window.Telegram.WebApp) {
+                const tg = window.Telegram.WebApp;
+                tg.ready();
+                tg.expand();
+                initData = tg.initData || '';
+            } else {
+                console.warn('Telegram WebApp не обнаружен, используем тестовые данные');
+                initData = 'user=%7B%22id%22%3A123456789%2C%22first_name%22%3A%22Test%22%7D';
+            }
+        } catch (e) {
+            initData = 'user=%7B%22id%22%3A123456789%2C%22first_name%22%3A%22Test%22%7D';
+        }
+
+        // ================= API FUNCTIONS =================
+        async function apiRequest(endpoint, method = 'GET', body = null) {
+            const headers = { 'Content-Type': 'application/json', 'X-Telegram-Init-Data': initData };
+            const config = { method, headers };
+            if (body) config.body = JSON.stringify(body);
+            try {
+                const response = await fetch(`${API_URL}${endpoint}`, config);
+                if (!response.ok) {
+                    let errorMsg = 'Ошибка сервера';
+                    try { const errData = await response.json(); errorMsg = errData.detail || errorMsg; } catch (e) {}
+                    throw new Error(errorMsg);
+                }
+                return await response.json();
+            } catch (e) {
+                console.error('API Error:', e);
+                throw e;
+            }
+        }
+        async function registerUser() { return await apiRequest('/api/register', 'POST'); }
+        async function loadState() {
+            currentState = await apiRequest('/api/state', 'GET');
+            currentUser = currentState.user;
+            currentServerName = currentUser.server;
+            if (currentUser.is_admin) document.getElementById('admin-badge').classList.remove('hidden');
+            else document.getElementById('admin-badge').classList.add('hidden');
+            return currentState;
+        }
+        async function performAction(actionType, payload = {}) {
+            const result = await apiRequest('/api/action', 'POST', { type: actionType, ...payload });
+            await loadState();
+            return result;
+        }
+
+        // ================= HELPER FUNCTIONS =================
+        function showScreen(screenId) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById(screenId).classList.add('active');
+        }
+        function closeModal() {
+            document.getElementById('modal-overlay').classList.remove('active');
+            document.getElementById('modal-content').innerHTML = '';
+            caseOpeningInProgress = false;
+            wheelSpinning = false;
+        }
+        function openModal(html) {
+            document.getElementById('modal-content').innerHTML = html;
+            document.getElementById('modal-overlay').classList.add('active');
+        }
+        function showError(message) {
+            openModal(`<h3>❌ Ошибка</h3><p class="text-center text-muted">${message}</p><button class="btn mt-8" onclick="closeModal()">ОК</button>`);
+        }
+        function getItemInfo(itemId) {
+            if (!currentState || !currentState.items) return { id: itemId, name: 'Неизвестно', icon: '❓', rarity: 'common' };
+            for (const rarity in currentState.items) {
+                const item = currentState.items[rarity].find(i => i.id === itemId);
+                if (item) return item;
+            }
+            return { id: itemId, name: itemId, icon: '❓', rarity: 'common' };
+        }
+        function getRarityLabel(rarity) { return currentState?.rarity_labels?.[rarity] || rarity; }
+        function estimateItemPrice(rarity) {
+            const base = { common: 50, rare: 150, epic: 400, legendary: 1000, mythic: 3000 };
+            return base[rarity] || 50;
+        }
+        function getSellPrice(rarity) {
+            const multiplier = currentState?.server_settings?.sell_multiplier || 0.5;
+            return Math.floor(estimateItemPrice(rarity) * multiplier);
+        }
+
+        // ================= SERVER SELECTION =================
+        async function loadServers() {
+            try { const data = await apiRequest('/api/servers', 'GET'); return data.servers || []; } catch (e) { showError(e.message); return []; }
+        }
+        async function renderServers() {
+            const servers = await loadServers();
+            const serverList = document.getElementById('servers-list');
+            if (!currentState || !currentState.user) {
+                serverList.innerHTML = '<div class="empty-state"><div class="icon">🖥️</div>Загрузка...</div>';
+                return;
+            }
+            document.getElementById('servers-greeting').textContent = `Игрок: ${currentState.user.nickname}`;
+            let html = '';
+            servers.forEach(s => {
+                html += `
+                    <div class="server-card" onclick="selectServer('${s.server_name}')">
+                        <div><div class="fw-bold" style="font-size:16px;">${s.server_name}</div><div class="text-xs text-muted mt-8">Онлайн: ${s.online}</div></div>
+                        <div class="server-online"><span class="dot ${s.is_online ? '' : 'dot-offline'}"></span><span>${s.is_online ? 'Онлайн' : 'Оффлайн'}</span></div>
+                    </div>
+                `;
+            });
+            serverList.innerHTML = html;
+        }
+        async function selectServer(serverName) {
+            try {
+                await performAction('change_server', { server: serverName });
+                showScreen('screen-main');
+                updateMainUI();
+                renderCurrentScreen();
+            } catch (e) { showError(e.message); }
+        }
+
+        function updateMainUI() {
+            if (!currentState || !currentState.user) return;
+            currentUser = currentState.user;
+            document.getElementById('main-nick').textContent = currentUser.nickname;
+            document.getElementById('main-server-badge').textContent = currentUser.server || 'No server';
+            document.getElementById('main-balance').textContent = `💰 ${currentUser.balance.toLocaleString()}`;
+        }
+
+        // ================= NAVIGATION =================
+        function renderCurrentScreen() {
+            switch (currentScreen) {
+                case 'cases': renderCases(); break;
+                case 'inventory': renderInventory(); break;
+                case 'market': renderMarket(); break;
+                case 'chat': renderChat(); break;
+                case 'profile': renderProfile(); break;
+                case 'shop': renderShop(); break;
+                case 'quests': renderQuests(); break;
+                case 'top': renderTop(); break;
+                case 'wheel': renderWheel(); break;
+                case 'settings': renderSettings(); break;
+                case 'friends': renderFriends(); break;
+                case 'admin': renderAdminPanel(); break;
+                case 'clans': renderClans(); break;
+                case 'achievements': renderAchievements(); break;
+                case 'daily': renderDaily(); break;
+                case 'levels': renderLevels(); break;
+                case 'skins': renderSkins(); break;
+                case 'pvp': renderPvP(); break;
+                case 'slots': renderSlots(); break;
+                case 'auction': renderAuction(); break;
+                case 'stats': renderServerStats(); break;
+                case 'dialogs': renderDialogs(); break;
+                case 'dialog': renderDialog(currentDialogId); break;
+                case 'events': renderEvents(); break;
+                case 'subscriptions': renderSubscriptions(); break;
+                case 'gifts': renderGifts(); break;
+                case 'history': renderFullHistory(); break;
+                default: renderCases();
+            }
+        }
+
+        // ================= CASES =================
+        function renderCases() {
+            if (!currentState) return;
+            const cases = currentState.cases || [];
+            let html = '';
+            cases.forEach(cs => {
+                const chancesStr = Object.keys(cs.chances || {}).filter(k => cs.chances[k] > 0).map(k => `${getRarityLabel(k)}: ${Math.round(cs.chances[k] * 100)}%`).join(' | ');
+                html += `<div class="case-card" onclick="showCaseDetails('${cs.id}')"><div class="case-icon">${cs.icon}</div><div class="fw-bold">${cs.name}</div><div class="price mt-8">${cs.price} монет</div><div class="text-xs text-muted mt-8">${chancesStr}</div></div>`;
+            });
+            html += `<div class="flex-col gap-8 mt-8"><button class="btn btn-secondary" onclick="showWheel()">🎡 Колесо фортуны</button><button class="btn btn-secondary" onclick="showQuests()">📜 Квесты</button></div>`;
+            document.getElementById('main-content').innerHTML = `<h3 class="mb-8">🎁 Кейсы</h3><div class="case-grid">${html}</div>`;
+        }
+        function showCaseDetails(caseId) {
+            const cs = (currentState.cases || []).find(c => c.id === caseId);
+            if (!cs) return;
+            const itemsList = Object.keys(cs.chances || {}).filter(k => cs.chances[k] > 0).map(r => `<div class="text-sm ${r}">${getRarityLabel(r)}: ${Math.round(cs.chances[r]*100)}%</div>`).join('');
+            openModal(`<h3>${cs.icon} ${cs.name}</h3><p class="text-center price-tag">${cs.price} монет</p><div class="mt-8 text-sm">${itemsList}</div><button class="btn mt-16" onclick="openCaseById('${cs.id}')">🔓 Открыть за ${cs.price}</button><button class="btn btn-secondary mt-8" onclick="closeModal()">Закрыть</button>`);
+        }
+        function openCaseById(caseId) {
+            const cs = (currentState.cases || []).find(c => c.id === caseId);
+            if (!cs) return;
+            closeModal();
+            openCase(cs);
+        }
+        async function openCase(caseData) {
+            if (!currentState || !currentState.user) return;
+            if (currentState.user.balance < caseData.price) { showError(`Недостаточно средств. Нужно ${caseData.price} монет.`); return; }
+            caseOpeningInProgress = true;
+            try {
+                openModal(`<div class="case-animation-container"><div class="case-box" style="font-size:80px;">${caseData.icon}</div><p class="text-center text-muted mt-8">Открываем...</p></div>`);
+                await new Promise(resolve => setTimeout(resolve, 1000));
+                const result = await performAction('open_case', { case_id: caseData.id });
+                const item = result.item;
+                if (item) {
+                    openModal(`<h3>🎉 Выпал предмет!</h3><div class="text-center mt-8"><div style="font-size:60px;">${item.icon}</div><p class="fw-bold mt-8 ${item.rarity}">${item.name}</p><span class="badge badge-${item.rarity} mt-8">${getRarityLabel(item.rarity)}</span></div><button class="btn mt-16" onclick="closeModal()">Забрать</button>`);
+                } else showError('Не удалось получить предмет');
+            } catch (e) { closeModal(); showError(e.message); }
+            finally { caseOpeningInProgress = false; updateMainUI(); renderCases(); }
+        }
+
+        // ================= INVENTORY =================
+        function renderInventory() {
+            if (!currentState) return;
+            const inv = currentState.user.inventory || [];
+            let filtered = inv;
+            const searchTerm = document.getElementById('inv-search')?.value?.toLowerCase() || '';
+            if (searchTerm) {
+                filtered = filtered.filter(item => {
+                    const info = getItemInfo(item.item_id);
+                    return info.name.toLowerCase().includes(searchTerm);
+                });
+            }
+            const activeFilters = [];
+            document.querySelectorAll('.inv-filter-checkbox:checked').forEach(cb => activeFilters.push(cb.value));
+            if (activeFilters.length > 0) {
+                filtered = filtered.filter(item => activeFilters.includes(item.rarity));
+            }
+            let itemsHtml = '';
+            if (filtered.length === 0) {
+                itemsHtml = '<div class="empty-state"><div class="icon">🎒</div>Нет предметов</div>';
+            } else {
+                filtered.forEach(invItem => {
+                    const info = getItemInfo(invItem.item_id);
+                    const sellPrice = getSellPrice(invItem.rarity);
+                    itemsHtml += `
+                        <div class="item-row">
+                            <div class="item-icon">${info.icon}</div>
+                            <div style="flex:1;">
+                                <div class="fw-bold text-sm ${invItem.rarity}">${info.name}</div>
+                                <span class="badge badge-${invItem.rarity}">${getRarityLabel(invItem.rarity)}</span>
+                                <div class="text-xs text-muted mt-8">UID: ${invItem.uid}</div>
+                            </div>
+                            <div class="flex-col gap-6">
+                                <button class="btn btn-sm btn-success" onclick="sellInvItem(${invItem.uid})">💰 ${sellPrice}</button>
+                                <button class="btn btn-sm btn-secondary" onclick="listInvItem(${invItem.uid})">📦 Рынок</button>
+                                <button class="btn btn-sm btn-secondary" onclick="showItemDetails(${invItem.uid})">ℹ️</button>
+                            </div>
+                        </div>
+                    `;
+                });
+            }
+            document.getElementById('main-content').innerHTML = `
+                <h3 class="mb-8">🎒 Инвентарь</h3>
+                <div class="flex-row gap-8 mb-8">
+                    <input type="text" id="inv-search" placeholder="Поиск..." oninput="renderInventory()" style="flex:1;">
+                    <button class="btn btn-sm btn-secondary" onclick="toggleFilters()">🔍 Фильтры</button>
+                    <button class="btn btn-sm btn-secondary" onclick="showCrafts()">🔧 Крафты</button>
+                </div>
+                <div class="filter-section" id="inv-filters">
+                    <div class="flex-row gap-6 mb-8">
+                        <label class="text-sm"><input type="checkbox" class="inv-filter-checkbox" value="common"> Обычные</label>
+                        <label class="text-sm"><input type="checkbox" class="inv-filter-checkbox" value="rare"> Редкие</label>
+                        <label class="text-sm"><input type="checkbox" class="inv-filter-checkbox" value="epic"> Эпические</label>
+                        <label class="text-sm"><input type="checkbox" class="inv-filter-checkbox" value="legendary"> Легендарные</label>
+                        <label class="text-sm"><input type="checkbox" class="inv-filter-checkbox" value="mythic"> Мифические</label>
+                    </div>
+                </div>
+                <div class="scroll-y" style="max-height:50vh;">${itemsHtml}</div>
+            `;
+            const filtersEl = document.getElementById('inv-filters');
+            if (filtersEl && window._filterState) filtersEl.classList.add('active');
+        }
+        function toggleFilters() {
+            const el = document.getElementById('inv-filters');
+            if (el) {
+                el.classList.toggle('active');
+                window._filterState = el.classList.contains('active');
+            }
+        }
+        async function sellInvItem(uid) {
+            if (!currentUser) return;
+            const invItem = currentUser.inventory.find(i => i.uid === uid);
+            if (!invItem) return;
+            const info = getItemInfo(invItem.item_id);
+            const sellPrice = getSellPrice(invItem.rarity);
+            openModal(`
+                <h3>💰 Продажа</h3>
+                <p class="text-center mt-8">Продать <span class="fw-bold ${invItem.rarity}">${info.name}</span> за ${sellPrice} монет?</p>
+                <button class="btn btn-success mt-16" onclick="confirmSell(${uid})">Продать</button>
+                <button class="btn btn-secondary mt-8" onclick="closeModal()">Отмена</button>
+            `);
+        }
+        async function confirmSell(uid) {
+            closeModal();
+            try { await performAction('sell_item', { uid }); renderInventory(); } catch (e) { showError(e.message); }
+        }
+        function listInvItem(uid) {
+            if (!currentUser) return;
+            const invItem = currentUser.inventory.find(i => i.uid === uid);
+            if (!invItem) return;
+            const info = getItemInfo(invItem.item_id);
+            const suggestedPrice = Math.floor(estimateItemPrice(invItem.rarity) * 1.5);
+            openModal(`
+                <h3>📦 Выставить на рынок</h3>
+                <p class="text-center mt-8">${info.icon} <span class="fw-bold ${invItem.rarity}">${info.name}</span></p>
+                <input type="number" id="market-price" class="mt-8" placeholder="Цена" min="1" value="${suggestedPrice}">
+                <button class="btn mt-16" onclick="confirmList(${uid})">Выставить</button>
+                <button class="btn btn-secondary mt-8" onclick="closeModal()">Отмена</button>
+            `);
+        }
+        async function confirmList(uid) {
+            const priceInput = document.getElementById('market-price');
+            const price = parseInt(priceInput?.value || '0');
+            if (price < 1) return;
+            closeModal();
+            try { await performAction('list_market', { uid, price }); renderInventory(); } catch (e) { showError(e.message); }
+        }
+        function showItemDetails(uid) {
+            if (!currentUser) return;
+            const invItem = currentUser.inventory.find(i => i.uid === uid);
+            if (!invItem) return;
+            const info = getItemInfo(invItem.item_id);
+            openModal(`
+                <h3>ℹ️ Информация о предмете</h3>
+                <div class="text-center mt-8">
+                    <div style="font-size:60px;">${info.icon}</div>
+                    <p class="fw-bold mt-8 ${invItem.rarity}">${info.name}</p>
+                    <span class="badge badge-${invItem.rarity}">${getRarityLabel(invItem.rarity)}</span>
+                    <p class="text-xs text-muted mt-8">UID: ${invItem.uid}</p>
+                    <p class="text-xs text-muted">Получен: ${new Date(invItem.timestamp * 1000).toLocaleDateString()}</p>
+                </div>
+                <button class="btn btn-secondary mt-16" onclick="closeModal()">Закрыть</button>
+            `);
+        }
+
+        // ================= CRAFTING =================
+        const CRAFT_RECIPES = [
+            { id: 'craft_rare', name: 'Крафт: Редкий предмет', resultRarity: 'rare', cost: { common: 5 }, description: '5 обычных → 1 редкий' },
+            { id: 'craft_epic', name: 'Крафт: Эпический предмет', resultRarity: 'epic', cost: { rare: 3 }, description: '3 редких → 1 эпический' },
+            { id: 'craft_legendary', name: 'Крафт: Легендарный предмет', resultRarity: 'legendary', cost: { epic: 3 }, description: '3 эпических → 1 легендарный' },
+            { id: 'craft_mythic', name: 'Крафт: Мифический предмет', resultRarity: 'mythic', cost: { legendary: 3 }, description: '3 легендарных → 1 мифический' }
+        ];
+        function checkCraftAvailability(recipe) {
+            if (!currentUser) return false;
+            for (const key of Object.keys(recipe.cost)) {
+                const count = currentUser.inventory.filter(i => i.rarity === key).length;
+                if (count < recipe.cost[key]) return false;
+            }
+            return true;
+        }
+        function showCrafts() {
+            const recipesHtml = CRAFT_RECIPES.map(r => {
+                const canCraft = checkCraftAvailability(r);
+                return `
+                    <div class="item-row" style="cursor:${canCraft ? 'pointer' : 'default'}; opacity:${canCraft ? '1' : '0.5'};">
+                        <div style="flex:1;">
+                            <div class="fw-bold text-sm">${r.name}</div>
+                            <div class="text-xs text-muted">${r.description}</div>
+                        </div>
+                        <button class="btn btn-sm ${canCraft ? 'btn-success' : 'btn-secondary'}" ${canCraft ? '' : 'disabled'} onclick="craftItem('${r.id}')">Крафт</button>
+                    </div>
+                `;
+            }).join('');
+            openModal(`<h3>🔧 Крафты</h3><div class="mt-8">${recipesHtml}</div><button class="btn btn-secondary mt-16" onclick="closeModal()">Закрыть</button>`);
+        }
+        async function craftItem(recipeId) {
+            const recipe = CRAFT_RECIPES.find(r => r.id === recipeId);
+            if (!recipe) return;
+            if (!checkCraftAvailability(recipe)) { showError('Недостаточно предметов для крафта'); return; }
+            try {
+                const result = await performAction('craft', { recipe_id: recipeId });
+                closeModal();
+                if (result.item) {
+                    openModal(`<h3>🔧 Крафт успешен!</h3><div class="text-center mt-8"><div style="font-size:60px;">${result.item.icon}</div><p class="fw-bold mt-8 ${result.item.rarity}">${result.item.name}</p><span class="badge badge-${result.item.rarity} mt-8">${getRarityLabel(result.item.rarity)}</span></div><button class="btn mt-16" onclick="closeModal()">Забрать</button>`);
+                } else showError('Крафт выполнен, но предмет не получен');
+                renderInventory();
+            } catch (e) { showError(e.message); }
+        }
+
+        // ================= MARKET =================
+        function renderMarket() {
+            if (!currentState) return;
+            const listings = currentState.market || [];
+            let html = '';
+            if (listings.length === 0) html = '<div class="empty-state"><div class="icon">📦</div>Рынок пуст</div>';
+            else {
+                listings.forEach(l => {
+                    const info = getItemInfo(l.item_id);
+                    const isOwn = l.seller_id === currentUser.id;
+                    html += `
+                        <div class="market-row">
+                            <div class="item-icon">${info.icon}</div>
+                            <div style="flex:1;">
+                                <div class="fw-bold text-sm ${l.rarity}">${info.name}</div>
+                                <span class="badge badge-${l.rarity}">${getRarityLabel(l.rarity)}</span>
+                                <div class="text-xs text-muted mt-8">Продавец: ${l.seller_nick}</div>
+                            </div>
+                            <div class="flex-col gap-6">
+                                <span class="price-tag">${l.price}💰</span>
+                                ${isOwn 
+                                    ? `<button class="btn btn-xs btn-secondary" onclick="cancelListing(${l.uid})">Снять</button>` 
+                                    : `<button class="btn btn-xs btn-success" onclick="buyFromMarket(${l.uid})">Купить</button>`}
+                            </div>
+                        </div>
+                    `;
+                });
+            }
+            document.getElementById('main-content').innerHTML = `<h3 class="mb-8">📦 Рынок</h3><div class="scroll-y" style="max-height:55vh;">${html}</div>`;
+        }
+        async function buyFromMarket(listingUid) {
+            try { await performAction('buy_market', { listing_uid: listingUid }); renderMarket(); renderInventory(); } catch (e) { showError(e.message); }
+        }
+        async function cancelListing(listingUid) {
+            try { await performAction('cancel_listing', { listing_uid: listingUid }); renderMarket(); renderInventory(); } catch (e) { showError(e.message); }
+        }
+
+        // ================= CHAT =================
+        function renderChat() {
+            if (!currentState) return;
+            const messages = currentState.chat || [];
+            let msgsHtml = '';
+            if (messages.length === 0) msgsHtml = '<div class="empty-state"><div class="icon">💬</div>Нет сообщений</div>';
+            else {
+                messages.forEach(m => {
+                    const isOwn = m.sender_nick === currentUser.nickname;
+                    msgsHtml += `
+                        <div class="chat-message ${isOwn ? 'own' : 'other'}">
+                            <div class="sender">${m.sender_nick}</div>
+                            <div>${m.text}</div>
+                            <div class="time">${new Date(m.timestamp * 1000).toLocaleTimeString()}</div>
+                        </div>
+                    `;
+                });
+            }
+            document.getElementById('main-content').innerHTML = `
+                <h3 class="mb-8">💬 Чат</h3>
+                <div class="scroll-y" id="chat-messages" style="max-height:40vh;">${msgsHtml}</div>
+                <div class="flex-row gap-6 mt-8">
+                    <input type="text" id="chat-input" placeholder="Сообщение..." style="flex:1;">
+                    <button class="btn btn-sm" onclick="sendChatFromInput()">📨</button>
+                </div>
+            `;
+            const chatDiv = document.getElementById('chat-messages');
+            if (chatDiv) chatDiv.scrollTop = chatDiv.scrollHeight;
+        }
+        async function sendChatFromInput() {
+            const input = document.getElementById('chat-input');
+            if (!input || !input.value.trim()) return;
+            const text = input.value.trim();
+            try { await performAction('send_chat', { text, is_private: false }); renderChat(); } catch (e) { showError(e.message); }
+            input.value = '';
+        }
+
+        // ================= PROFILE =================
+        function renderProfile() {
+            if (!currentState) return;
+            const user = currentState.user;
+            const stats = user.stats || {};
+            const achievements = user.achievements || [];
+            const warnings = user.warnings || [];
+            const warningsHtml = warnings.length > 0 
+                ? `<div class="glass mt-8" style="padding:10px;border-left:3px solid var(--orange);"><div class="fw-bold text-sm">⚠️ Предупреждения:</div>${warnings.map(w => `<div class="text-xs text-muted">${w.reason || 'Нет причины'}</div>`).join('')}</div>` 
+                : '';
+            const achievementsHtml = achievements.length > 0
+                ? `<div class="flex-row gap-6 mt-8">${achievements.map(a => `<span class="badge badge-legendary" title="${a.description}">${a.icon} ${a.name}</span>`).join('')}</div>` 
+                : '';
+            document.getElementById('main-content').innerHTML = `
+                <h3 class="mb-8">👤 Профиль</h3>
+                <div class="glass" style="padding:14px;">
+                    <div class="stat-row"><span class="text-muted">Ник:</span><span class="fw-bold">${user.nickname}</span></div>
+                    <div class="stat-row"><span class="text-muted">Баланс:</span><span class="price-tag">${user.balance} монет</span></div>
+                    <div class="stat-row"><span class="text-muted">Сервер:</span><span>${user.server}</span></div>
+                    <div class="stat-row"><span class="text-muted">Зарегистрирован:</span><span>${new Date(user.registered_at * 1000).toLocaleDateString()}</span></div>
+                    <div class="stat-row"><span class="text-muted">Уровень:</span><span>${user.level || 1}</span></div>
+                </div>
+                ${warningsHtml}
+                ${achievementsHtml}
+                <div class="glass mt-8" style="padding:14px;">
+                    <div class="fw-bold mb-8">📊 Статистика</div>
+                    <div class="stat-row"><span class="text-muted">Открыто кейсов:</span><span>${stats.openedCases || 0}</span></div>
+                    <div class="stat-row"><span class="text-muted">Получено предметов:</span><span>${stats.itemsObtained || 0}</span></div>
+                    <div class="stat-row"><span class="text-muted">Потрачено:</span><span>${stats.spent || 0} монет</span></div>
+                    <div class="stat-row"><span class="text-muted">Заработано:</span><span>${stats.earned || 0} монет</span></div>
+                    <div class="stat-row"><span class="text-muted">Продано на рынке:</span><span>${stats.marketSales || 0}</span></div>
+                    <div class="stat-row"><span class="text-muted">Выиграно PvP:</span><span>${stats.pvpWins || 0}</span></div>
+                </div>
+                <div class="glass mt-8" style="padding:14px;">
+                    <div class="fw-bold mb-8">⚙️ Настройки</div>
+                    <div class="stat-row"><span>🔊 Звук</span><div class="toggle-switch ${user.sound_enabled ? 'active' : ''}" onclick="toggleSound()"></div></div>
+                    <div class="stat-row"><span>🔔 Уведомления</span><div class="toggle-switch ${user.notifications_enabled ? 'active' : ''}" onclick="toggleNotifications()"></div></div>
+                    <div class="stat-row"><span>📱 Вибрация</span><div class="toggle-switch ${user.vibration_enabled ? 'active' : ''}" onclick="toggleVibration()"></div></div>
+                </div>
+                <button class="btn btn-secondary mt-8" onclick="showSupportForm()">📞 Поддержка</button>
+                <button class="btn btn-danger mt-8" onclick="exitServer()">🚪 Сменить сервер</button>
+            `;
+        }
+        async function toggleSound() {
+            try { await performAction('toggle_sound'); renderProfile(); } catch (e) { showError(e.message); }
+        }
+        async function toggleNotifications() {
+            try { await performAction('toggle_notifications'); renderProfile(); } catch (e) { showError(e.message); }
+        }
+        async function toggleVibration() {
+            try { await performAction('toggle_vibration'); renderProfile(); } catch (e) { showError(e.message); }
+        }
+        function showSupportForm() {
+            openModal(`
+                <h3>📞 Поддержка</h3>
+                <div class="flex-row gap-6 mb-8">
+                    <button class="btn btn-sm ${!window._showingTicketList ? 'btn-success' : 'btn-secondary'}" onclick="showTicketList()">Мои тикеты</button>
+                    <button class="btn btn-sm ${window._showingTicketList ? 'btn-success' : 'btn-secondary'}" onclick="showNewTicketForm()">Создать тикет</button>
+                </div>
+                <div id="support-content"></div>
+                <button class="btn btn-secondary mt-16" onclick="closeModal()">Закрыть</button>
+            `);
+            showTicketList();
+        }
+        async function showTicketList() {
+            window._showingTicketList = true;
+            const content = document.getElementById('support-content');
+            content.innerHTML = '<p class="text-center text-muted">Загрузка...</p>';
+            
+            try {
+                const response = await fetch(`${API_URL}/api/support/tickets`, {
+                    headers: { 'X-Telegram-Init-Data': initData }
+                });
+                const data = await response.json();
+                
+                if (data.tickets.length === 0) {
+                    content.innerHTML = '<div class="empty-state"><div class="icon">📞</div>Нет тикетов</div>';
+                    return;
+                }
+                
+                let html = '';
+                data.tickets.forEach(t => {
+                    const statusColors = { open: 'badge-legendary', in_progress: 'badge-epic', closed: 'badge-common' };
+                    const statusLabels = { open: 'Открыт', in_progress: 'В работе', closed: 'Закрыт' };
+                    html += `
+                        <div class="card mt-8" onclick="viewTicket(${t.id})">
+                            <div class="flex-row gap-8">
+                                <span class="fw-bold text-sm">${t.subject}</span>
+                                <span class="badge ${statusColors[t.status]}">${statusLabels[t.status]}</span>
+                            </div>
+                            <p class="text-xs text-muted mt-8">${new Date(t.created_at * 1000).toLocaleDateString()}</p>
+                            ${t.replies.length > 0 ? `<span class="badge badge-rare">${t.replies.length} ответов</span>` : ''}
+                        </div>
+                    `;
+                });
+                content.innerHTML = html;
+            } catch (e) {
+                content.innerHTML = `<p class="text-center text-muted">Ошибка загрузки</p>`;
+            }
+        }
+        function showNewTicketForm() {
+            window._showingTicketList = false;
+            const content = document.getElementById('support-content');
+            content.innerHTML = `
+                <input type="text" id="support-subject" class="mt-8" placeholder="Тема">
+                <textarea id="support-message" class="mt-8" placeholder="Сообщение" rows="4"></textarea>
+                <button class="btn mt-16" onclick="submitTicket()">Отправить</button>
+            `;
+        }
+        async function submitTicket() {
+            const subject = document.getElementById('support-subject')?.value;
+            const message = document.getElementById('support-message')?.value;
+            if (!subject || !message) return;
+            try { await performAction('submit_ticket', { subject, message }); showTicketList(); } catch (e) { showError(e.message); }
+        }
+        async function viewTicket(ticketId) {
+            const content = document.getElementById('support-content');
+            content.innerHTML = '<p class="text-center text-muted">Загрузка...</p>';
+            
+            try {
+                const response = await fetch(`${API_URL}/api/support/tickets`, {
+                    headers: { 'X-Telegram-Init-Data': initData }
+                });
+                const data = await response.json();
+                const ticket = data.tickets.find(t => t.id === ticketId);
+                
+                if (!ticket) {
+                    content.innerHTML = '<p class="text-center text-muted">Тикет не найден</p>';
+                    return;
+                }
+                
+                let repliesHtml = '';
+                ticket.replies.forEach(r => {
+                    repliesHtml += `
+                        <div class="chat-message ${r.is_admin ? 'other' : 'own'}">
+                            <div class="sender">${r.sender_nick} ${r.is_admin ? '👑' : ''}</div>
+                            <div>${r.message}</div>
+                            <div class="time">${new Date(r.created_at * 1000).toLocaleString()}</div>
+                        </div>
+                    `;
+                });
+                
+                content.innerHTML = `
+                    <div class="flex-row gap-6 mb-8">
+                        <button class="btn btn-xs btn-secondary" onclick="showTicketList()">← Назад</button>
+                    </div>
+                    <div class="glass" style="padding:14px;">
+                        <div class="fw-bold">${ticket.subject}</div>
+                        <p class="text-sm mt-8">${ticket.message}</p>
+                    </div>
+                    <div class="scroll-y mt-8" style="max-height:200px;">${repliesHtml}</div>
+                    <div class="flex-row gap-6 mt-8">
+                        <input type="text" id="ticket-reply" placeholder="Ответ..." style="flex:1;">
+                        <button class="btn btn-sm" onclick="replyToTicket(${ticketId})">📨</button>
+                    </div>
+                `;
+            } catch (e) {
+                content.innerHTML = `<p class="text-center text-muted">Ошибка загрузки</p>`;
+            }
+        }
+        async function replyToTicket(ticketId) {
+            const input = document.getElementById('ticket-reply');
+            if (!input || !input.value.trim()) return;
+            const message = input.value.trim();
+            
+            try {
+                const response = await fetch(`${API_URL}/api/support/tickets/${ticketId}/reply`, {
+                    method: 'POST',
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'X-Telegram-Init-Data': initData 
+                    },
+                    body: JSON.stringify({ message })
+                });
+                if (response.ok) {
+                    input.value = '';
+                    viewTicket(ticketId);
+                } else {
+                    showError('Ошибка отправки');
+                }
+            } catch (e) {
+                showError(e.message);
+            }
+        }
+
+        // ================= WHEEL =================
+        function renderWheel() {
+            document.getElementById('main-content').innerHTML = `
+                <h3 class="mb-8">🎡 Колесо фортуны</h3>
+                <div class="wheel-container mt-12">
+                    <div class="wheel-pointer"></div>
+                    <div style="width:200px;height:200px;border-radius:50%;background:linear-gradient(45deg,#7c3aed,#a855f7,#7c3aed);margin:0 auto;display:flex;align-items:center;justify-content:center;font-size:40px;">🎡</div>
+                </div>
+                <p class="text-center text-muted mt-8">Стоимость: 50 монет</p>
+                <button class="btn mt-16" onclick="spinWheel()">🎲 Крутить</button>
+            `;
+        }
+        async function spinWheel() {
+            if (wheelSpinning) return;
+            wheelSpinning = true;
+            try {
+                const result = await performAction('spin_wheel');
+                const prize = result.prize;
+                openModal(`<h3>🎡 Результат</h3><div class="text-center mt-8"><div style="font-size:60px;">${prize.reward_type === 'nothing' ? '😢' : '🎉'}</div><p class="fw-bold mt-8">${prize.name}</p>${prize.reward_amount > 0 ? `<p class="price-tag">+${prize.reward_amount} монет</p>` : ''}</div><button class="btn mt-16" onclick="closeModal()">ОК</button>`);
+            } catch (e) { showError(e.message); }
+            finally { wheelSpinning = false; }
+        }
+
+        // ================= QUESTS =================
+        function renderQuests() {
+            if (!currentState) return;
+            const quests = currentState.quests || [];
+            let html = '';
+            if (quests.length === 0) html = '<div class="empty-state"><div class="icon">📜</div>Нет квестов</div>';
+            else {
+                quests.forEach(q => {
+                    const progress = Math.min(q.progress / q.target * 100, 100);
+                    html += `
+                        <div class="card mt-8">
+                            <div class="fw-bold">${q.name}</div>
+                            <p class="text-xs text-muted mt-8">${q.description}</p>
+                            <div class="progress-bar mt-8"><div class="progress-fill" style="width:${progress}%"></div></div>
+                            <div class="flex-row gap-8 mt-8"><span class="text-xs text-muted">${q.progress}/${q.target}</span><span class="price-tag">${q.reward}💰</span></div>
+                            ${q.completed && !q.claimed ? `<button class="btn btn-success btn-sm mt-8" onclick="claimQuest('${q.id}')">Забрать награду</button>` : ''}
+                            ${q.claimed ? `<span class="badge badge-success mt-8">Получено</span>` : ''}
+                        </div>
+                    `;
+                });
+            }
+            document.getElementById('main-content').innerHTML = `<h3 class="mb-8">📜 Квесты</h3>${html}`;
+        }
+        async function claimQuest(questId) {
+            try { await performAction('claim_quest', { quest_id: questId }); renderQuests(); } catch (e) { showError(e.message); }
+        }
+
+        // ================= TOP =================
+        function renderTop() {
+            document.getElementById('main-content').innerHTML = `
+                <h3 class="mb-8">🏆 Топ игроков</h3>
+                <div class="tab-bar">
+                    <button class="tab-btn active" onclick="switchTopType('balance')">Богатые</button>
+                    <button class="tab-btn" onclick="switchTopType('cases')">Кейсы</button>
+                </div>
+                <div class="empty-state"><div class="icon">🏆</div>Загрузка...</div>
+            `;
+        }
+        function switchTopType(type) {
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            event.target.classList.add('active');
+        }
+
+        // ================= SHOP =================
+        function renderShop() {
+            document.getElementById('main-content').innerHTML = `
+                <h3 class="mb-8">🛒 Магазин</h3>
+                <div class="card"><div class="fw-bold">💎 Монеты</div><p class="text-xs text-muted mt-8">Купить монеты</p><button class="btn btn-sm btn-success mt-8" onclick="showDonateModal()">Купить</button></div>
+                <div class="card mt-8"><div class="fw-bold">🎨 Скины</div><p class="text-xs text-muted mt-8">Кастомизировать интерфейс</p><button class="btn btn-sm btn-secondary mt-8" onclick="showSkins()">Смотреть</button></div>
+                <div class="card mt-8"><div class="fw-bold">🎁 Промокоды</div><p class="text-xs text-muted mt-8">Активировать промокод</p><button class="btn btn-sm btn-secondary mt-8" onclick="activatePromo()">Активировать</button></div>
+            `;
+        }
+
+        // ================= FRIENDS =================
+        function renderFriends() {
+            document.getElementById('main-content').innerHTML = `
+                <h3 class="mb-8">👫 Друзья</h3>
+                <div class="glass" style="padding:14px;">
+                    <p class="text-sm">Твой реферальный код:</p>
+                    <div class="flex-row gap-6 mt-8"><input type="text" value="STORM${currentUser?.id || 0}" readonly><button class="btn btn-sm" onclick="copyReferral()">📋</button></div>
+                </div>
+                <div class="empty-state mt-8"><div class="icon">👫</div>Список друзей пуст</div>
+            `;
+        }
+        function copyReferral() {
+            navigator.clipboard.writeText(`STORM${currentUser?.id || 0}`);
+        }
+
+        // ================= CLANS =================
+        function renderClans() {
+            document.getElementById('main-content').innerHTML = `
+                <h3 class="mb-8">🏰 Кланы</h3>
+                <button class="btn btn-secondary" onclick="showCreateClan()">➕ Создать клан</button>
+                <div class="empty-state mt-8"><div class="icon">🏰</div>Нет кланов</div>
+            `;
+        }
+        function showCreateClan() {
+            openModal(`<h3>🏰 Создать клан</h3><input type="text" id="clan-name" class="mt-8" placeholder="Название клана"><textarea id="clan-desc" class="mt-8" placeholder="Описание" rows="3"></textarea><button class="btn mt-16" onclick="createClan()">Создать</button><button class="btn btn-secondary mt-8" onclick="closeModal()">Отмена</button>`);
+        }
+        async function createClan() {
+            const name = document.getElementById('clan-name')?.value;
+            const description = document.getElementById('clan-desc')?.value;
+            if (!name) return;
+            try { await performAction('create_clan', { name, description }); closeModal(); openModal(`<h3>✅ Клан создан</h3><button class="btn mt-8" onclick="closeModal()">ОК</button>`); } catch (e) { showError(e.message); }
+        }
+
+        // ================= ACHIEVEMENTS =================
+        function renderAchievements() {
+            document.getElementById('main-content').innerHTML = `
+                <h3 class="mb-8">🎖️ Достижения</h3>
+                <div class="empty-state"><div class="icon">🎖️</div>Загрузка...</div>
+            `;
+        }
+
+        // ================= DAILY =================
+        function renderDaily() {
+            document.getElementById('main-content').innerHTML = `
+                <h3 class="mb-8">📅 Ежедневная награда</h3>
+                <div class="glass" style="padding:14px;text-align:center;">
+                    <div style="font-size:60px;">🎁</div>
+                    <p class="fw-bold mt-8">Забери ежедневную награду!</p>
+                    <button class="btn btn-success mt-16" onclick="claimDaily()">Забрать</button>
+                </div>
+            `;
+        }
+        async function claimDaily() {
+            try { const result = await performAction('claim_daily'); openModal(`<h3>✅ Награда получена!</h3><p class="text-center">+${result.reward} монет</p><p class="text-center">Серия: ${result.streak} дней</p><button class="btn mt-8" onclick="closeModal()">ОК</button>`); } catch (e) { showError(e.message); }
+        }
+
+        // ================= LEVELS =================
+        function renderLevels() {
+            if (!currentState) return;
+            const user = currentState.user;
+            document.getElementById('main-content').innerHTML = `
+                <h3 class="mb-8">🆙 Уровень</h3>
+                <div class="glass" style="padding:14px;">
+                    <div class="text-center"><div style="font-size:60px;">⭐</div><p class="fw-bold mt-8">Уровень ${user.level}</p></div>
+                    <div class="progress-bar mt-8"><div class="progress-fill" style="width:${(user.exp/user.next_exp)*100}%"></div></div>
+                    <p class="text-center text-muted mt-8">${user.exp}/${user.next_exp} XP</p>
+                </div>
+            `;
+        }
+
+        // ================= SKINS =================
+        function renderSkins() {
+            document.getElementById('main-content').innerHTML = `
+                <h3 class="mb-8">🎨 Скины</h3>
+                <div class="card"><div class="fw-bold">Стандартный</div><p class="text-xs text-muted">Бесплатный скин</p><button class="btn btn-sm btn-secondary mt-8" disabled>Надет</button></div>
+                <div class="card mt-8"><div class="fw-bold">Золотой</div><p class="text-xs text-muted">500 монет</p><button class="btn btn-sm btn-success mt-8" onclick="buySkin('gold')">Купить</button></div>
+                <div class="card mt-8"><div class="fw-bold">Алмазный</div><p class="text-xs text-muted">1000 монет</p><button class="btn btn-sm btn-success mt-8" onclick="buySkin('diamond')">Купить</button></div>
+            `;
+        }
+        async function buySkin(skinId) {
+            try { await performAction('equip_skin', { skin_id: `skin_${skinId}` }); renderSkins(); } catch (e) { showError(e.message); }
+        }
+
+        // ================= PVP =================
+        function renderPvP() {
+            document.getElementById('main-content').innerHTML = `
+                <h3 class="mb-8">⚔️ PvP</h3>
+                <div class="glass" style="padding:14px;">
+                    <p class="text-sm">Выбери ставку:</p>
+                    <div class="flex-row gap-6 mt-8"><button class="btn btn-sm" onclick="startPvP(100)">100💰</button><button class="btn btn-sm" onclick="startPvP(500)">500💰</button><button class="btn btn-sm" onclick="startPvP(1000)">1000💰</button></div>
+                </div>
+            `;
+        }
+        async function startPvP(stake) {
+            try { const result = await performAction('start_pvp', { stake }); openModal(`<h3>${result.won ? '🎉 Победа!' : '😢 Поражение'}</h3><p class="text-center">${result.won ? '+' : '-'}${result.stake} монет</p><button class="btn mt-8" onclick="closeModal()">ОК</button>`); } catch (e) { showError(e.message); }
+        }
+
+        // ================= SLOTS =================
+        function renderSlots() {
+            document.getElementById('main-content').innerHTML = `
+                <h3 class="mb-8">🎰 Слоты</h3>
+                <div class="slot-machine mt-12"><div class="slot-reel">🍒</div><div class="slot-reel">🍋</div><div class="slot-reel">🍇</div></div>
+                <p class="text-center text-muted mt-8">Стоимость: 25 монет</p>
+                <button class="btn mt-16" onclick="spinSlots()">🎲 Крутить</button>
+            `;
+        }
+        async function spinSlots() {
+            try { const result = await performAction('spin_slots', { cost: 25 }); openModal(`<h3>🎰 Результат</h3><div class="text-center mt-8"><div class="slot-machine"><div class="slot-reel">${result.symbols[0]}</div><div class="slot-reel">${result.symbols[1]}</div><div class="slot-reel">${result.symbols[2]}</div></div>${result.win_amount > 0 ? `<p class="price-tag mt-8">+${result.win_amount} монет</p>` : '<p class="text-muted mt-8">Не повезло</p>'}</div><button class="btn mt-16" onclick="closeModal()">ОК</button>`); } catch (e) { showError(e.message); }
+        }
+
+        // ================= AUCTION =================
+        function renderAuction() {
+            document.getElementById('main-content').innerHTML = `
+                <h3 class="mb-8">🏪 Аукцион</h3>
+                <div class="empty-state"><div class="icon">🏪</div>Нет активных аукционов</div>
+            `;
+        }
+
+        // ================= ADMIN PANEL =================
+        function openAdminPanel() {
+            currentScreen = 'admin';
+            renderAdminPanel();
+        }
+        function renderAdminPanel() {
+            document.getElementById('main-content').innerHTML = `
+                <h3 class="mb-8">👑 Панель администратора</h3>
+                <div class="flex-col gap-8">
+                    <button class="btn btn-secondary" onclick="adminUsers()">👥 Пользователи</button>
+                    <button class="btn btn-secondary" onclick="adminSupport()">📞 Поддержка</button>
+                    <button class="btn btn-secondary" onclick="adminCases()">📦 Кейсы</button>
+                    <button class="btn btn-secondary" onclick="adminItems()">🎨 Предметы</button>
+                    <button class="btn btn-secondary" onclick="adminTransactions()">💳 Транзакции</button>
+                    <button class="btn btn-secondary" onclick="adminSettings()">⚙️ Настройки</button>
+                    <button class="btn btn-secondary" onclick="adminLogs()">📋 Логи</button>
+                    <button class="btn btn-danger mt-8" onclick="adminBroadcast()">📢 Рассылка</button>
+                </div>
+            `;
+        }
+        function adminUsers() { openModal(`<h3>👥 Пользователи</h3><p class="text-center text-muted">Функция в разработке</p><button class="btn btn-secondary mt-8" onclick="closeModal()">Закрыть</button>`); }
+        function adminSupport() {
+            openModal(`
+                <h3>📞 Тикеты поддержки</h3>
+                <div id="admin-tickets-content" class="mt-8"></div>
+                <button class="btn btn-secondary mt-16" onclick="closeModal()">Закрыть</button>
+            `);
+            loadAdminTickets();
+        }
+        async function loadAdminTickets() {
+            const content = document.getElementById('admin-tickets-content');
+            content.innerHTML = '<p class="text-center text-muted">Загрузка...</p>';
+            
+            try {
+                const response = await fetch(`${API_URL}/api/support/tickets/all`, {
+                    headers: { 'X-Telegram-Init-Data': initData }
+                });
+                const data = await response.json();
+                
+                if (data.tickets.length === 0) {
+                    content.innerHTML = '<div class="empty-state"><div class="icon">📞</div>Нет тикетов</div>';
+                    return;
+                }
+                
+                let html = '';
+                data.tickets.forEach(t => {
+                    const statusColors = { open: 'badge-legendary', in_progress: 'badge-epic', closed: 'badge-common' };
+                    const statusLabels = { open: 'Открыт', in_progress: 'В работе', closed: 'Закрыт' };
+                    html += `
+                        <div class="card mt-8" onclick="viewAdminTicket(${t.id})">
+                            <div class="flex-row gap-8">
+                                <span class="fw-bold text-sm">${t.user_nick}</span>
+                                <span class="badge ${statusColors[t.status]}">${statusLabels[t.status]}</span>
+                            </div>
+                            <div class="fw-bold text-sm mt-8">${t.subject}</div>
+                            <p class="text-xs text-muted mt-8">${new Date(t.created_at * 1000).toLocaleString()}</p>
+                            ${t.replies.length > 0 ? `<span class="badge badge-rare">${t.replies.length} ответов</span>` : ''}
+                        </div>
+                    `;
+                });
+                content.innerHTML = html;
+            } catch (e) {
+                content.innerHTML = `<p class="text-center text-muted">Ошибка загрузки</p>`;
+            }
+        }
+        async function viewAdminTicket(ticketId) {
+            const content = document.getElementById('admin-tickets-content');
+            content.innerHTML = '<p class="text-center text-muted">Загрузка...</p>';
+            
+            try {
+                const response = await fetch(`${API_URL}/api/support/tickets/all`, {
+                    headers: { 'X-Telegram-Init-Data': initData }
+                });
+                const data = await response.json();
+                const ticket = data.tickets.find(t => t.id === ticketId);
+                
+                if (!ticket) {
+                    content.innerHTML = '<p class="text-center text-muted">Тикет не найден</p>';
+                    return;
+                }
+                
+                let repliesHtml = '';
+                ticket.replies.forEach(r => {
+                    repliesHtml += `
+                        <div class="chat-message ${r.is_admin ? 'own' : 'other'}">
+                            <div class="sender">${r.sender_nick} ${r.is_admin ? '👑' : ''}</div>
+                            <div>${r.message}</div>
+                            <div class="time">${new Date(r.created_at * 1000).toLocaleString()}</div>
+                        </div>
+                    `;
+                });
+                
+                const statusColors = { open: 'badge-legendary', in_progress: 'badge-epic', closed: 'badge-common' };
+                
+                content.innerHTML = `
+                    <div class="flex-row gap-6 mb-8">
+                        <button class="btn btn-xs btn-secondary" onclick="loadAdminTickets()">← Назад</button>
+                        <select id="ticket-status" class="btn-sm" onchange="updateTicketStatus(${ticketId}, this.value)">
+                            <option value="open" ${ticket.status === 'open' ? 'selected' : ''}>Открыт</option>
+                            <option value="in_progress" ${ticket.status === 'in_progress' ? 'selected' : ''}>В работе</option>
+                            <option value="closed" ${ticket.status === 'closed' ? 'selected' : ''}>Закрыт</option>
+                        </select>
+                    </div>
+                    <div class="glass" style="padding:14px;">
+                        <div class="flex-row gap-8">
+                            <span class="fw-bold">${ticket.user_nick}</span>
+                            <span class="badge ${statusColors[ticket.status]}">${ticket.status}</span>
+                        </div>
+                        <div class="fw-bold mt-8">${ticket.subject}</div>
+                        <p class="text-sm mt-8">${ticket.message}</p>
+                    </div>
+                    <div class="scroll-y mt-8" style="max-height:200px;">${repliesHtml}</div>
+                    <div class="flex-row gap-6 mt-8">
+                        <input type="text" id="admin-ticket-reply" placeholder="Ответ..." style="flex:1;">
+                        <button class="btn btn-sm" onclick="replyToTicket(${ticketId})">📨</button>
+                    </div>
+                `;
+            } catch (e) {
+                content.innerHTML = `<p class="text-center text-muted">Ошибка загрузки</p>`;
+            }
+        }
+        async function updateTicketStatus(ticketId, newStatus) {
+            try {
+                const response = await fetch(`${API_URL}/api/support/tickets/${ticketId}/status`, {
+                    method: 'PUT',
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'X-Telegram-Init-Data': initData 
+                    },
+                    body: JSON.stringify({ status: newStatus })
+                });
+                if (response.ok) {
+                    viewAdminTicket(ticketId);
+                } else {
+                    showError('Ошибка обновления статуса');
+                }
+            } catch (e) {
+                showError(e.message);
+            }
+        }
+        function adminCases() { openModal(`<h3>📦 Кейсы</h3><p class="text-center text-muted">Функция в разработке</p><button class="btn btn-secondary mt-8" onclick="closeModal()">Закрыть</button>`); }
+        function adminItems() { openModal(`<h3>🎨 Предметы</h3><p class="text-center text-muted">Функция в разработке</p><button class="btn btn-secondary mt-8" onclick="closeModal()">Закрыть</button>`); }
+        function adminTransactions() { openModal(`<h3>💳 Транзакции</h3><p class="text-center text-muted">Функция в разработке</p><button class="btn btn-secondary mt-8" onclick="closeModal()">Закрыть</button>`); }
+        function adminSettings() { openModal(`<h3>⚙️ Настройки</h3><p class="text-center text-muted">Функция в разработке</p><button class="btn btn-secondary mt-8" onclick="closeModal()">Закрыть</button>`); }
+        function adminLogs() { openModal(`<h3>📋 Логи</h3><p class="text-center text-muted">Функция в разработке</p><button class="btn btn-secondary mt-8" onclick="closeModal()">Закрыть</button>`); }
+        function adminBroadcast() {
+            openModal(`<h3>📢 Рассылка</h3><textarea id="broadcast-msg" class="mt-8" placeholder="Сообщение для рассылки" rows="4"></textarea><button class="btn mt-16" onclick="sendBroadcast()">Отправить</button><button class="btn btn-secondary mt-8" onclick="closeModal()">Отмена</button>`);
+        }
+        async function sendBroadcast() {
+            const msg = document.getElementById('broadcast-msg')?.value;
+            if (!msg) return;
+            try { await performAction('admin_broadcast', { message: msg }); closeModal(); openModal(`<h3>✅ Рассылка отправлена</h3><button class="btn mt-8" onclick="closeModal()">ОК</button>`); } catch (e) { showError(e.message); }
+        }
+
+        // ================= SETTINGS =================
+        function renderSettings() {
+            document.getElementById('main-content').innerHTML = `
+                <h3 class="mb-8">⚙️ Настройки</h3>
+                <div class="glass" style="padding:14px;">
+                    <div class="stat-row"><span>🔊 Звук</span><div class="toggle-switch ${currentUser?.sound_enabled ? 'active' : ''}" onclick="toggleSound()"></div></div>
+                    <div class="stat-row"><span>🔔 Уведомления</span><div class="toggle-switch ${currentUser?.notifications_enabled ? 'active' : ''}" onclick="toggleNotifications()"></div></div>
+                    <div class="stat-row"><span>📱 Вибрация</span><div class="toggle-switch ${currentUser?.vibration_enabled ? 'active' : ''}" onclick="toggleVibration()"></div></div>
+                </div>
+                <button class="btn btn-danger mt-8" onclick="exitServer()">🚪 Сменить сервер</button>
+            `;
+        }
+
+        // ================= DONATE =================
+        function showDonateModal() {
+            openModal(`
+                <h3>💎 Пополнение баланса</h3>
+                <p class="text-xs text-muted text-center mt-8">Выберите способ оплаты</p>
+                <div class="flex-col gap-8 mt-8">
+                    <button class="btn btn-secondary" onclick="showStarsDonate()">⭐ Звёзды Telegram</button>
+                    <button class="btn btn-secondary" onclick="showCryptoDonate()">₿ Криптовалюта</button>
+                    <button class="btn btn-secondary" onclick="showCardDonate()">💳 Банковская карта</button>
+                </div>
+                <button class="btn btn-secondary mt-16" onclick="closeModal()">Закрыть</button>
+            `);
+        }
+        function showStarsDonate() {
+            openModal(`
+                <h3>⭐ Оплата звёздами</h3>
+                <div class="mt-8">
+                    <div class="item-row"><div style="flex:1;"><div class="fw-bold">10 ⭐ = 500 монет</div></div><button class="btn btn-xs btn-success" onclick="buyCoins('stars', 10)">Купить</button></div>
+                    <div class="item-row"><div style="flex:1;"><div class="fw-bold">50 ⭐ = 3000 монет</div></div><button class="btn btn-xs btn-success" onclick="buyCoins('stars', 50)">Купить</button></div>
+                    <div class="item-row"><div style="flex:1;"><div class="fw-bold">100 ⭐ = 10000 монет</div></div><button class="btn btn-xs btn-success" onclick="buyCoins('stars', 100)">Купить</button></div>
+                    <div class="item-row"><div style="flex:1;"><div class="fw-bold">500 ⭐ = 60000 монет</div></div><button class="btn btn-xs btn-success" onclick="buyCoins('stars', 500)">Купить</button></div>
+                </div>
+                <button class="btn btn-secondary mt-16" onclick="showDonateModal()">Назад</button>
+            `);
+        }
+        function showCryptoDonate() {
+            openModal(`
+                <h3>₿ Оплата криптовалютой</h3>
+                <p class="text-xs text-muted">Отправьте USDT (TRC20) на адрес:</p>
+                <div class="glass mt-8" style="padding:10px;word-break:break-all;">TJSomethingAddress1234567890</div>
+                <p class="text-xs text-muted mt-8">После оплаты напишите в поддержку с хэшем транзакции.</p>
+                <button class="btn btn-secondary mt-16" onclick="showDonateModal()">Назад</button>
+            `);
+        }
+        function showCardDonate() {
+            openModal(`
+                <h3>💳 Оплата картой</h3>
+                <p class="text-xs text-muted">Введите сумму (в рублях):</p>
+                <input type="number" id="card-amount" class="mt-8" placeholder="100" min="10">
+                <button class="btn mt-16" onclick="cardPayment()">Оплатить</button>
+                <button class="btn btn-secondary mt-8" onclick="showDonateModal()">Назад</button>
+            `);
+        }
+        async function cardPayment() {
+            const amount = document.getElementById('card-amount')?.value;
+            if (!amount || amount < 10) return;
+            closeModal();
+            try {
+                const result = await performAction('card_payment', { amount: Number(amount) });
+                openModal(`<h3>✅ Платёж инициирован</h3><p class="text-center">Следуйте инструкциям: ${result.payment_url || ''}</p><button class="btn mt-8" onclick="closeModal()">ОК</button>`);
+            } catch (e) { showError(e.message); }
+        }
+        async function buyCoins(method, amount) {
+            closeModal();
+            openModal(`<h3>✅ Заказ оформлен</h3><p class="text-center">Используйте Telegram Stars для оплаты</p><button class="btn mt-8" onclick="closeModal()">ОК</button>`);
+        }
+        function activatePromo() {
+            openModal(`<h3>🎁 Промокод</h3><input type="text" id="promo-code" class="mt-8" placeholder="Введите промокод"><button class="btn mt-16" onclick="activatePromoCode()">Активировать</button><button class="btn btn-secondary mt-8" onclick="closeModal()">Отмена</button>`);
+        }
+        async function activatePromoCode() {
+            const code = document.getElementById('promo-code')?.value;
+            if (!code) return;
+            try { await performAction('activate_promo', { code }); closeModal(); openModal(`<h3>✅ Промокод активирован</h3><button class="btn mt-8" onclick="closeModal()">ОК</button>`); } catch (e) { showError(e.message); }
+        }
+
+        // ================= EXIT =================
+        async function exitServer() {
+            showScreen('screen-servers');
+            await loadState();
+            await renderServers();
+        }
+
+        // ================= NAVIGATION HANDLERS =================
+        function showMore() {
+            openModal(`
+                <h3>☰ Больше</h3>
+                <div class="flex-col gap-8 mt-8">
+                    <button class="btn btn-secondary" onclick="navigateTo('shop')">🛒 Магазин</button>
+                    <button class="btn btn-secondary" onclick="navigateTo('quests')">📜 Квесты</button>
+                    <button class="btn btn-secondary" onclick="navigateTo('top')">🏆 Топ</button>
+                    <button class="btn btn-secondary" onclick="navigateTo('wheel')">🎡 Колесо</button>
+                    <button class="btn btn-secondary" onclick="navigateTo('friends')">👫 Друзья</button>
+                    <button class="btn btn-secondary" onclick="navigateTo('clans')">🏰 Кланы</button>
+                    <button class="btn btn-secondary" onclick="navigateTo('achievements')">🎖️ Достижения</button>
+                    <button class="btn btn-secondary" onclick="navigateTo('daily')">📅 Ежедневная награда</button>
+                    <button class="btn btn-secondary" onclick="navigateTo('levels')">🆙 Уровень</button>
+                    <button class="btn btn-secondary" onclick="navigateTo('skins')">🎨 Скины</button>
+                    <button class="btn btn-secondary" onclick="navigateTo('pvp')">⚔️ PvP</button>
+                    <button class="btn btn-secondary" onclick="navigateTo('slots')">🎰 Слоты</button>
+                    <button class="btn btn-secondary" onclick="navigateTo('auction')">🏪 Аукцион</button>
+                    <button class="btn btn-secondary" onclick="navigateTo('stats')">📊 Статистика</button>
+                    <button class="btn btn-secondary" onclick="navigateTo('dialogs')">💬 Личные сообщения</button>
+                    <button class="btn btn-secondary" onclick="navigateTo('events')">🎪 События</button>
+                    <button class="btn btn-secondary" onclick="navigateTo('subscriptions')">💳 Подписки</button>
+                    <button class="btn btn-secondary" onclick="navigateTo('gifts')">🎁 Подарки</button>
+                    <button class="btn btn-secondary" onclick="navigateTo('history')">📜 История</button>
+                    <button class="btn btn-danger mt-8" onclick="closeModal()">Закрыть</button>
+                </div>
+            `);
+        }
+        function navigateTo(screen) {
+            closeModal();
+            currentScreen = screen;
+            document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+            if (screen === 'cases') document.querySelector('[data-screen="cases"]').classList.add('active');
+            else if (screen === 'inventory') document.querySelector('[data-screen="inventory"]').classList.add('active');
+            else if (screen === 'market') document.querySelector('[data-screen="market"]').classList.add('active');
+            else if (screen === 'chat') document.querySelector('[data-screen="chat"]').classList.add('active');
+            else if (screen === 'profile') document.querySelector('[data-screen="profile"]').classList.add('active');
+            else document.getElementById('nav-more').classList.add('active');
+            renderCurrentScreen();
+        }
+
+        // Привязка событий
+        document.querySelectorAll('.nav-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                if (this.dataset.screen === 'more') {
+                    showMore();
+                    return;
+                }
+                document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+                currentScreen = this.dataset.screen;
+                renderCurrentScreen();
+            });
+        });
+
+        // Глобальные функции
+        window.selectServer = selectServer;
+        window.showCaseDetails = showCaseDetails;
+        window.openCaseById = openCaseById;
+        window.sellInvItem = sellInvItem;
+        window.confirmSell = confirmSell;
+        window.listInvItem = listInvItem;
+        window.confirmList = confirmList;
+        window.showCrafts = showCrafts;
+        window.craftItem = craftItem;
+        window.toggleFilters = toggleFilters;
+        window.buyFromMarket = buyFromMarket;
+        window.cancelListing = cancelListing;
+        window.sendChatFromInput = sendChatFromInput;
+        window.toggleSound = toggleSound;
+        window.toggleNotifications = toggleNotifications;
+        window.toggleVibration = toggleVibration;
+        window.showSupportForm = showSupportForm;
+        window.submitTicket = submitTicket;
+        window.showDonateModal = showDonateModal;
+        window.closeModal = closeModal;
+        window.exitServer = exitServer;
+        window.showItemDetails = showItemDetails;
+        window.showReferral = showReferral;
+        window.showFriends = showFriends;
+        window.showQuests = showQuests;
+        window.showTop = showTop;
+        window.showHistory = showHistory;
+        window.showWheel = function() { navigateTo('wheel'); };
+        window.spinWheel = spinWheel;
+        window.claimQuest = claimQuest;
+        window.switchTopType = switchTopType;
+        window.copyReferral = copyReferral;
+        window.openAdminPanel = openAdminPanel;
+        window.adminUsers = adminUsers;
+        window.adminCases = adminCases;
+        window.adminItems = adminItems;
+        window.adminTransactions = adminTransactions;
+        window.adminSettings = adminSettings;
+        window.adminBanUser = adminBanUser;
+        window.adminEditUser = adminEditUser;
+        window.adminBroadcast = adminBroadcast;
+        window.sendBroadcast = sendBroadcast;
+        window.adminLogs = adminLogs;
+        window.showStarsDonate = showStarsDonate;
+        window.showCryptoDonate = showCryptoDonate;
+        window.showCardDonate = showCardDonate;
+        window.cardPayment = cardPayment;
+        window.buyCoins = buyCoins;
+        window.buySpecial = buySpecial;
+        window.activatePromo = activatePromo;
+        window.showShop = function() { navigateTo('shop'); };
+        window.showQuests = function() { navigateTo('quests'); };
+        window.showTop = function() { navigateTo('top'); };
+        window.showFriends = function() { navigateTo('friends'); };
+        window.showClans = function() { navigateTo('clans'); };
+        window.showAchievements = function() { navigateTo('achievements'); };
+        window.showDaily = function() { navigateTo('daily'); };
+        window.showLevels = function() { navigateTo('levels'); };
+        window.showSkins = function() { navigateTo('skins'); };
+        window.showPvP = function() { navigateTo('pvp'); };
+        window.showSlots = function() { navigateTo('slots'); };
+        window.showAuction = function() { navigateTo('auction'); };
+        window.showStats = function() { navigateTo('stats'); };
+        window.showClanDetails = showClanDetails;
+        window.showCreateClan = showCreateClan;
+        window.createClan = createClan;
+        window.claimDaily = claimDaily;
+        window.equipSkin = equipSkin;
+        window.startPvP = startPvP;
+        window.spinSlots = spinSlots;
+        window.placeBid = placeBid;
+        window.submitBid = submitBid;
+        window.showMore = showMore;
+        window.navigateTo = navigateTo;
+        window.showDialogs = function() { navigateTo('dialogs'); };
+        window.openDialog = openDialog;
+        window.sendDialogMessage = sendDialogMessage;
+        window.showEvents = function() { navigateTo('events'); };
+        window.showSubscriptions = function() { navigateTo('subscriptions'); };
+        window.buySubscription = buySubscription;
+        window.showGifts = function() { navigateTo('gifts'); };
+        window.sendGift = sendGift;
+        window.renderFullHistory = renderFullHistory;
+
+        // Модальное окно закрытие по клику вне
+        document.getElementById('modal-overlay').addEventListener('click', function(e) {
+            if (e.target === this && !caseOpeningInProgress && !wheelSpinning) closeModal();
+        });
+        document.getElementById('main-balance').addEventListener('click', function() { showDonateModal(); });
+
+        // Инициализация
+        async function init() {
+            try {
+                await registerUser();
+                await loadState();
+                showScreen('screen-servers');
+                await renderServers();
+            } catch (e) {
+                console.error('Init error:', e);
+                document.body.innerHTML = `<div style="display:flex;justify-content:center;align-items:center;height:100vh;color:white;flex-direction:column;gap:12px;"><h2>Ошибка подключения к серверу</h2><p>${e.message}</p><button onclick="location.reload()" style="padding:10px 20px;background:#7c3aed;color:white;border:none;border-radius:8px;cursor:pointer;">Повторить</button></div>`;
+            }
+        }
+        init();
+    </script>
+</body>
+</html>
