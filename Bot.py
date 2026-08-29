@@ -4,7 +4,7 @@
 # ============================================================
 
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup, WebAppInfo
-from telegram.ext import Application, CommandHandler, CallbackQueryHandler, CallbackContext, MessageHandler, filters
+from telegram.ext import Application, CommandHandler, CallbackContext, MessageHandler, filters
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func
 from config import settings
@@ -58,11 +58,11 @@ async def start(update: Update, context: CallbackContext):
     # Get or create user
     db_user = await get_or_create_user(telegram_id, user.username, user.first_name)
 
-    # Create button with callback
+    # Create WebApp button (opens as mini-app inside Telegram)
     keyboard = [
         [InlineKeyboardButton(
             "🎮 Открыть STORM CASES",
-            callback_data="open_app"
+            web_app=WebAppInfo(url="https://a16382667321-crypto.github.io/Storm-Cases/")
         )]
     ]
     reply_markup = InlineKeyboardMarkup(keyboard)
@@ -80,19 +80,10 @@ async def start(update: Update, context: CallbackContext):
 /balance — Проверить баланс
 /help — Помощь
 
-👇 Нажми кнопку ниже для получения ссылки:
+👇 Нажми кнопку ниже для открытия приложения:
     """
 
     await update.message.reply_text(welcome_message, reply_markup=reply_markup)
-
-
-async def button_callback(update: Update, context: CallbackContext):
-    """Handle button callbacks"""
-    query = update.callback_query
-    await query.answer()
-
-    if query.data == "open_app":
-        await query.message.reply_text("🌐 Открой приложение в браузере:\nhttp://localhost:8000")
 
 
 async def help_command(update: Update, context: CallbackContext):
@@ -406,9 +397,6 @@ def main():
     application.add_handler(CommandHandler("admin_stats", admin_stats_command))
     application.add_handler(CommandHandler("admin_addcoins", admin_addcoins_command))
     application.add_handler(CommandHandler("admin_broadcast", admin_broadcast_command))
-
-    # Add callback handler
-    application.add_handler(CallbackQueryHandler(button_callback))
 
     # Add message handler
     application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
