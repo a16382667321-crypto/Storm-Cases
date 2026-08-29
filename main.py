@@ -373,7 +373,9 @@ async def get_servers(db: AsyncSession = Depends(get_db)):
     """Get available servers"""
     result = await db.execute(select(Server))
     servers = result.scalars().all()
-    
+
+    print(f"📊 API: Returning {len(servers)} servers")
+
     return {
         'servers': [
             {
@@ -1477,7 +1479,9 @@ async def startup_event():
     async with AsyncSessionLocal() as db:
         # Check if servers exist
         result = await db.execute(select(Server))
-        if result.first() is None:
+        servers = result.scalars().all()
+        if len(servers) == 0:
+            print("📦 Adding default servers...")
             # Add default servers
             servers = [
                 Server(server_name="Server 1", online=150, description="Основной сервер"),
@@ -1486,6 +1490,10 @@ async def startup_event():
             ]
             for server in servers:
                 db.add(server)
+            await db.commit()
+            print(f"✅ Added {len(servers)} servers")
+        else:
+            print(f"✅ Found {len(servers)} existing servers")
 
         # Check if cases exist
         result = await db.execute(select(Case))
