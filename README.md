@@ -1,212 +1,255 @@
-# STORM CASES - Telegram Bot
+# Storm Cases - Telegram Mini App
 
-Telegram-бот для открытия кейсов с WebApp интерфейсом.
+Telegram бот с Mini App для открытия кейсов, торговли предметами и социального взаимодействия.
 
-## 📋 Описание проекта
+## 🚀 Возможности
 
-STORM CASES — это полноценный Telegram-бот с WebApp интерфейсом, который позволяет пользователям:
-- Открывать кейсы и получать предметы разной редкости
-- Торговать предметами на рынке
-- Участвовать в PvP матчах
-- Выполнять квесты и получать достижения
-- Использовать колесо фортуны и слоты
-- Создавать кланы и общаться в чате
-- Пополнять баланс через различные способы оплаты
+### Основные функции:
+- 🎰 **Система кейсов** - открывайте кейсы разной редкости (обычные, редкие, легендарные)
+- 📦 **Инвентарь и крафтинг** - управляйте предметами, создавайте новые из существующих
+- 💰 **Рынок** - торговля между игроками, аукционы
+- 💬 **Чат** - общение в реальном времени с сообществом
+- ⚙️ **Настройки** - профиль, техподдержка, ежедневные награды
 
-## 🚀 Установка и запуск
+### Админ функции:
+- 👥 **Управление участниками** - мут, бан, выдача валюты
+- 📋 **Логи активности** - отслеживание действий пользователей
+- 🎧 **Техподдержка** - ответы на запросы пользователей
+- 💰 **Экономика** - управление курсами валют, промокоды
+- 📊 **Аналитика** - статистика и отчеты
+- 🛡️ **Модерация** - управление жалобами и контентом
 
-### Требования
-- Python 3.10+
-- pip
+## 📋 Требования
 
-### Шаг 1: Клонирование и установка зависимостей
+- Node.js 18+
+- PostgreSQL 12+
+- Redis (опционально, для кэширования)
+- Telegram Bot Token
+
+## 🔧 Установка
+
+### 1. Клонирование и установка зависимостей
 
 ```bash
-cd storm-cases
-pip install -r requirements.txt
+# Backend
+cd storm-cases/backend
+npm install
+
+# Frontend
+cd storm-cases/frontend
+npm install
 ```
 
-### Шаг 2: Настройка переменных окружения
+### 2. Настройка переменных окружения
 
-Файл `.env` уже создан с вашими настройками:
-- `BOT_TOKEN`: Токен вашего Telegram бота (уже установлен)
-- `ADMIN_TELEGRAM_ID`: Ваш Telegram ID для админ-прав (8601398572)
-- `DATABASE_URL`: URL базы данных (по умолчанию SQLite)
-- `WEBAPP_URL`: URL для WebApp (по умолчанию http://localhost:8000)
+Создайте файл `.env` в `backend/`:
 
-### Шаг 3: Запуск
+```env
+# Telegram Bot
+TELEGRAM_BOT_TOKEN=your_telegram_bot_token
+TELEGRAM_WEBHOOK_URL=https://your-domain.com/webhook
 
-Запуск API сервера (FastAPI):
-```bash
-python main.py
+# Server
+PORT=3000
+NODE_ENV=development
+
+# Database
+DATABASE_URL="postgresql://user:password@localhost:5432/stormcases"
+REDIS_URL="redis://localhost:6379"
+
+# JWT
+JWT_SECRET=your-super-secret-jwt-key-change-this
+JWT_EXPIRES_IN=7d
+
+# Admin
+ADMIN_PASSWORD=your-admin-password
+ADMIN_IDS=123456789,987654321
+
+# Mini App
+MINI_APP_URL=http://localhost:5173
 ```
 
-Запуск Telegram бота (в отдельном терминале):
+### 3. Настройка базы данных
+
 ```bash
-python Bot.py
+cd storm-cases/backend
+
+# Генерация Prisma Client
+npm run prisma:generate
+
+# Создание миграций
+npm run prisma:migrate
+
+# Заполнение тестовыми данными
+npm run prisma:seed
+```
+
+### 4. Запуск проекта
+
+```bash
+# Backend (терминал 1)
+cd storm-cases/backend
+npm run dev
+
+# Frontend (терминал 2)
+cd storm-cases/frontend
+npm run dev
+```
+
+## 🌐 Развертывание
+
+### Backend
+
+1. Разверните PostgreSQL базу данных
+2. Установите зависимости: `npm install`
+3. Настройте переменные окружения
+4. Запустите миграции: `npm run prisma:migrate`
+5. Заполните данными: `npm run prisma:seed`
+6. Соберите проект: `npm run build`
+7. Запустите: `npm start`
+
+### Frontend
+
+1. Установите зависимости: `npm install`
+2. Соберите проект: `npm run build`
+3. Разверните `dist/` папку на статический хостинг
+
+### Telegram Bot
+
+1. Установите webhook:
+```bash
+curl -F "url=https://your-domain.com/webhook" \
+  https://api.telegram.org/bot<YOUR_BOT_TOKEN>/setWebhook
 ```
 
 ## 📁 Структура проекта
 
 ```
 storm-cases/
-├── .env                    # Переменные окружения
-├── .env.example            # Пример переменных окружения
-├── config.py               # Конфигурация
-├── database.py             # Настройка базы данных
-├── models.py               # Модели базы данных
-├── main.py                 # FastAPI backend
-├── Bot.py                  # Telegram бот
-├── payments.py             # Интеграция платежей
-├── requirements.txt        # Зависимости Python
-├── index.html              # WebApp интерфейс
-└── README.md               # Этот файл
+├── backend/
+│   ├── src/
+│   │   ├── bot/           # Telegram бот
+│   │   ├── config/        # Конфигурация
+│   │   ├── controllers/   # Контроллеры
+│   │   ├── middleware/    # Middleware
+│   │   ├── models/        # Модели данных
+│   │   ├── routes/        # API маршруты
+│   │   ├── services/      # Бизнес-логика
+│   │   ├── types/         # TypeScript типы
+│   │   ├── utils/         # Утилиты
+│   │   └── index.ts       # Точка входа
+│   ├── prisma/
+│   │   ├── schema.prisma  # Схема БД
+│   │   └── seed.ts        # Тестовые данные
+│   └── package.json
+├── frontend/
+│   ├── src/
+│   │   ├── pages/         # Страницы Mini App
+│   │   ├── components/    # React компоненты
+│   │   ├── utils/         # Утилиты
+│   │   ├── App.tsx        # Главный компонент
+│   │   └── main.tsx       # Точка входа
+│   └── package.json
+└── README.md
 ```
 
-## 🎮 Команды бота
+## 🔑 Telegram Bot Token
 
-- `/start` — Запустить бота и открыть WebApp
-- `/help` — Помощь
-- `/profile` — Профиль пользователя
-- `/balance` — Проверить баланс
-- `/servers` — Список серверов
+1. Найдите [@BotFather](https://t.me/botfather) в Telegram
+2. Отправьте `/newbot`
+3. Следуйте инструкциям для создания бота
+4. Скопируйте токен и добавьте в `.env`
 
-### Админ-команды (только для админа)
+## 🎮 Использование
 
-- `/admin` — Панель администратора
-- `/admin_users` — Список пользователей
-- `/admin_stats` — Статистика сервера
-- `/admin_addcoins <user_id> <amount>` — Добавить монеты пользователю
-- `/admin_broadcast <message>` — Отправить рассылку
+1. Найдите вашего бота в Telegram
+2. Отправьте `/start`
+3. Нажмите на кнопку "Открыть Storm Cases"
+4. Используйте Mini App для открытия кейсов, торговли и общения
 
-## 💰 Система платежей
+## 👨‍💻 Админ панель
 
-### Telegram Stars
-- 10 ⭐ = 500 монет
-- 50 ⭐ = 3000 монет
-- 100 ⭐ = 10000 монет
-- 500 ⭐ = 60000 монет
+1. Откройте настройки в Mini App
+2. Перейдите во вкладку "Админ панель"
+3. Введите админ пароль (из `.env`)
+4. Получите доступ к функциям управления
 
-### Криптовалюта (USDT TRC20)
-- Интеграция с Crypto Pay API (опционально)
+## 🛠️ API Документация
 
-### Банковская карта
-- Интеграция с платежными шлюзами (YooKassa, UnitPay и др.)
+### Authentication
+- `POST /api/auth/admin-login` - Вход в админ панель
+- `GET /api/auth/verify` - Проверка токена
 
-## 🎨 Редкость предметов
+### Users
+- `GET /api/users/profile` - Профиль пользователя
+- `PUT /api/users/profile` - Обновление профиля
+- `POST /api/users/daily-reward` - Ежедневная награда
+- `POST /api/users/refer` - Реферальная система
 
-- ⚪ **Common** (Обычный) — базовая цена 50 монет
-- 🔵 **Rare** (Редкий) — базовая цена 150 монет
-- 🟣 **Epic** (Эпический) — базовая цена 400 монет
-- 🟡 **Legendary** (Легендарный) — базовая цена 1000 монет
-- 🔴 **Mythic** (Мифический) — базовая цена 3000 монет
+### Cases
+- `GET /api/cases` - Список кейсов
+- `GET /api/cases/:id` - Детали кейса
+- `POST /api/cases/:id/open` - Открыть кейс
+- `POST /api/cases/battle` - Боевой режим
 
-## 🔧 API Эндпоинты
+### Inventory
+- `GET /api/inventory` - Инвентарь
+- `POST /api/inventory/craft` - Крафтинг
+- `POST /api/inventory/upgrade` - Апгрейд предмета
+- `PUT /api/inventory/:id/favorite` - Избранное
 
-### Публичные
-- `GET /` — WebApp интерфейс
-- `POST /api/register` — Регистрация пользователя
-- `GET /api/state` — Получение состояния пользователя
-- `GET /api/servers` — Список серверов
+### Market
+- `GET /api/market/listings` - Список объявлений
+- `POST /api/market/list` - Создать объявление
+- `POST /api/market/buy/:id` - Купить предмет
+- `DELETE /api/market/listings/:id` - Удалить объявление
+- `POST /api/market/auctions/:id/bid` - Ставка на аукционе
 
-### Действия (POST /api/action)
-- `change_server` — Сменить сервер
-- `open_case` — Открыть кейс
-- `sell_item` — Продать предмет
-- `list_market` — Выставить на рынок
-- `buy_market` — Купить с рынка
-- `cancel_listing` — Снять с рынка
-- `send_chat` — Отправить сообщение в чат
-- `craft` — Крафт предмета
-- `buy_subscription` — Купить подписку
-- `send_gift` — Отправить подарок
-- `spin_wheel` — Крутить колесо
-- `spin_slots` — Крутить слоты
-- `start_pvp` — Начать PvP матч
-- `claim_daily` — Получить ежедневную награду
-- `claim_quest` — Получить награду за квест
-- `activate_promo` — Активировать промокод
-- И многие другие...
+### Chat
+- `GET /api/chat/history` - История чата
+- `POST /api/chat/report` - Пожаловаться на сообщение
+- `GET /api/chat/online` - Онлайн пользователи
+- `POST /api/chat/:id/react` - Реакция на сообщение
 
-## 🛡️ Безопасность
+### Support
+- `GET /api/support/tickets` - Тикеты пользователя
+- `POST /api/support/tickets` - Создать тикет
+- `POST /api/support/tickets/:id/respond` - Ответить на тикет
+- `GET /api/support/tickets/:id` - Детали тикета
+- `PUT /api/support/tickets/:id/close` - Закрыть тикет
 
-- Telegram WebApp initData проверяется на сервере
-- Админ-команды доступны только для указанного ADMIN_TELEGRAM_ID
-- Все транзакции записываются в историю
+### Admin
+- `GET /api/admin/users` - Список пользователей
+- `GET /api/admin/users/:id` - Детали пользователя
+- `PUT /api/admin/users/:id/mute` - Мьют пользователя
+- `PUT /api/admin/users/:id/unmute` - Размьют
+- `PUT /api/admin/users/:id/ban` - Бан пользователя
+- `PUT /api/admin/users/:id/unban` - Разбан
+- `PUT /api/admin/users/:id/balance` - Выдать баланс
+- `GET /api/admin/logs` - Логи системы
+- `GET /api/admin/support/tickets` - Тикеты поддержки
+- `POST /api/admin/support/tickets/:id/respond` - Ответ на тикет
+- `GET /api/admin/economy/rates` - Курсы валют
+- `POST /api/admin/economy/promocodes` - Создать промокод
+- `GET /api/admin/analytics/stats` - Статистика
+- `GET /api/admin/moderation/reports` - Жалобы
 
-## 📊 База данных
+## 🧪 Тестирование
 
-Используется SQLAlchemy ORM с поддержкой асинхронных операций. По умолчанию используется SQLite, но можно легко переключиться на PostgreSQL или MySQL.
+```bash
+# Backend тесты
+cd backend
+npm test
 
-### Основные таблицы:
-- `users` — Пользователи
-- `servers` — Серверы
-- `cases` — Кейсы
-- `items` — Предметы
-- `inventory_items` — Инвентарь
-- `market_listings` — Рынок
-- `chat_messages` — Чат
-- `quests` — Квесты
-- `achievements` — Достижения
-- И многие другие...
-
-## 🚀 Развертывание
-
-### Использование Docker (опционально)
-
-Создайте `Dockerfile`:
-```dockerfile
-FROM python:3.10-slim
-WORKDIR /app
-COPY requirements.txt .
-RUN pip install -r requirements.txt
-COPY . .
-CMD ["python", "main.py"]
+# Frontend тесты
+cd frontend
+npm test
 ```
-
-### Использование systemd (Linux)
-
-Создайте файл сервиса `/etc/systemd/system/storm-cases-api.service`:
-```ini
-[Unit]
-Description=STORM CASES API
-After=network.target
-
-[Service]
-Type=simple
-User=your_user
-WorkingDirectory=/path/to/storm-cases
-ExecStart=/usr/bin/python3 /path/to/storm-cases/main.py
-Restart=always
-
-[Install]
-WantedBy=multi-user.target
-```
-
-## 🐛 Устранение проблем
-
-### Бот не отвечает
-- Проверьте, что BOT_TOKEN правильный в .env
-- Убедитесь, что бот запущен (`python Bot.py`)
-- Проверьте логи на наличие ошибок
-
-### WebApp не открывается
-- Убедитесь, что API сервер запущен (`python main.py`)
-- Проверьте, что WEBAPP_URL в .env правильный
-- Проверьте, что порт 8000 не занят
-
-### Ошибки базы данных
-- Удалите файл `storm_cases.db` для пересоздания базы
-- Проверьте права доступа к файлу базы данных
 
 ## 📝 Лицензия
 
-Этот проект создан для образовательных целей.
+MIT
 
-## 👤 Автор
+## 🤝 Поддержка
 
-Создано с помощью ИИ-разработчика для Telegram бота STORM CASES.
-
-## 📞 Поддержка
-
-Для связи и поддержки используйте функцию "Поддержка" в приложении или обратитесь к администратору.
+Для вопросов и поддержки используйте техподдержку в Mini App или создайте issue в репозитории.
