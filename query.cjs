@@ -1,93 +1,79 @@
 Object.defineProperty(exports, Symbol.toStringTag, { value: "Module" });
-const require_classPrivateFieldSet2 = require("./classPrivateFieldSet2-Bo0ZyOIv.cjs");
 const require_utils = require("./utils.cjs");
 const require_notifyManager = require("./notifyManager.cjs");
 const require_retryer = require("./retryer.cjs");
 const require_removable = require("./removable.cjs");
 const require_infiniteQueryBehavior = require("./infiniteQueryBehavior.cjs");
-const require_classPrivateMethodInitSpec = require("./classPrivateMethodInitSpec-DVhcLejn.cjs");
 //#region src/query.ts
-var _queryType = /* @__PURE__ */ new WeakMap();
-var _initialState = /* @__PURE__ */ new WeakMap();
-var _revertState = /* @__PURE__ */ new WeakMap();
-var _cache = /* @__PURE__ */ new WeakMap();
-var _client = /* @__PURE__ */ new WeakMap();
-var _retryer = /* @__PURE__ */ new WeakMap();
-var _defaultOptions = /* @__PURE__ */ new WeakMap();
-var _abortSignalConsumed = /* @__PURE__ */ new WeakMap();
-var _Query_brand = /* @__PURE__ */ new WeakSet();
 var Query = class extends require_removable.Removable {
+	#queryType;
+	#initialState;
+	#revertState;
+	#cache;
+	#client;
+	#retryer;
+	#defaultOptions;
+	#abortSignalConsumed;
 	constructor(config) {
 		super();
-		require_classPrivateMethodInitSpec._classPrivateMethodInitSpec(this, _Query_brand);
-		require_classPrivateFieldSet2._classPrivateFieldInitSpec(this, _queryType, void 0);
-		require_classPrivateFieldSet2._classPrivateFieldInitSpec(this, _initialState, void 0);
-		require_classPrivateFieldSet2._classPrivateFieldInitSpec(this, _revertState, void 0);
-		require_classPrivateFieldSet2._classPrivateFieldInitSpec(this, _cache, void 0);
-		require_classPrivateFieldSet2._classPrivateFieldInitSpec(this, _client, void 0);
-		require_classPrivateFieldSet2._classPrivateFieldInitSpec(this, _retryer, void 0);
-		require_classPrivateFieldSet2._classPrivateFieldInitSpec(this, _defaultOptions, void 0);
-		require_classPrivateFieldSet2._classPrivateFieldInitSpec(this, _abortSignalConsumed, void 0);
-		require_classPrivateFieldSet2._classPrivateFieldSet2(_abortSignalConsumed, this, false);
-		require_classPrivateFieldSet2._classPrivateFieldSet2(_defaultOptions, this, config.defaultOptions);
+		this.#abortSignalConsumed = false;
+		this.#defaultOptions = config.defaultOptions;
 		this.setOptions(config.options);
 		this.observers = [];
-		require_classPrivateFieldSet2._classPrivateFieldSet2(_client, this, config.client);
-		require_classPrivateFieldSet2._classPrivateFieldSet2(_cache, this, require_classPrivateFieldSet2._classPrivateFieldGet2(_client, this).getQueryCache());
+		this.#client = config.client;
+		this.#cache = this.#client.getQueryCache();
 		this.queryKey = config.queryKey;
 		this.queryHash = config.queryHash;
-		require_classPrivateFieldSet2._classPrivateFieldSet2(_initialState, this, getDefaultState(this.options));
-		this.state = config.state ?? require_classPrivateFieldSet2._classPrivateFieldGet2(_initialState, this);
+		this.#initialState = getDefaultState(this.options);
+		this.state = config.state ?? this.#initialState;
 		this.scheduleGc();
 	}
 	get meta() {
 		return this.options.meta;
 	}
 	get queryType() {
-		return require_classPrivateFieldSet2._classPrivateFieldGet2(_queryType, this);
+		return this.#queryType;
 	}
 	get promise() {
-		var _classPrivateFieldGet2$1;
-		return (_classPrivateFieldGet2$1 = require_classPrivateFieldSet2._classPrivateFieldGet2(_retryer, this)) === null || _classPrivateFieldGet2$1 === void 0 ? void 0 : _classPrivateFieldGet2$1.promise;
+		return this.#retryer?.promise;
 	}
 	setOptions(options) {
 		this.options = {
-			...require_classPrivateFieldSet2._classPrivateFieldGet2(_defaultOptions, this),
+			...this.#defaultOptions,
 			...options
 		};
-		if (options === null || options === void 0 ? void 0 : options._type) require_classPrivateFieldSet2._classPrivateFieldSet2(_queryType, this, options._type);
+		if (options?._type) this.#queryType = options._type;
 		this.updateGcTime(this.options.gcTime);
 		if (this.state && this.state.data === void 0) {
 			const defaultState = getDefaultState(this.options);
 			if (defaultState.data !== void 0) {
 				this.setState(successState(defaultState.data, defaultState.dataUpdatedAt));
-				require_classPrivateFieldSet2._classPrivateFieldSet2(_initialState, this, defaultState);
+				this.#initialState = defaultState;
 			}
 		}
 	}
 	optionalRemove() {
-		if (!this.observers.length && this.state.fetchStatus === "idle") require_classPrivateFieldSet2._classPrivateFieldGet2(_cache, this).remove(this);
+		if (!this.observers.length && this.state.fetchStatus === "idle") this.#cache.remove(this);
 	}
 	setData(newData, options) {
 		const data = require_utils.replaceData(this.state.data, newData, this.options);
-		require_classPrivateFieldSet2._assertClassBrand(_Query_brand, this, _dispatch).call(this, {
+		this.#dispatch({
 			data,
 			type: "success",
-			dataUpdatedAt: options === null || options === void 0 ? void 0 : options.updatedAt,
-			manual: options === null || options === void 0 ? void 0 : options.manual
+			dataUpdatedAt: options?.updatedAt,
+			manual: options?.manual
 		});
 		return data;
 	}
 	setState(state) {
-		require_classPrivateFieldSet2._assertClassBrand(_Query_brand, this, _dispatch).call(this, {
+		this.#dispatch({
 			type: "setState",
 			state
 		});
 	}
 	cancel(options) {
-		var _classPrivateFieldGet3, _classPrivateFieldGet4;
-		const promise = (_classPrivateFieldGet3 = require_classPrivateFieldSet2._classPrivateFieldGet2(_retryer, this)) === null || _classPrivateFieldGet3 === void 0 ? void 0 : _classPrivateFieldGet3.promise;
-		(_classPrivateFieldGet4 = require_classPrivateFieldSet2._classPrivateFieldGet2(_retryer, this)) === null || _classPrivateFieldGet4 === void 0 || _classPrivateFieldGet4.cancel(options);
+		const promise = this.#retryer?.promise;
+		this.#retryer?.cancel(options);
 		return promise ? promise.then(require_utils.noop).catch(require_utils.noop) : Promise.resolve();
 	}
 	destroy() {
@@ -95,7 +81,7 @@ var Query = class extends require_removable.Removable {
 		this.cancel({ silent: true });
 	}
 	get resetState() {
-		return require_classPrivateFieldSet2._classPrivateFieldGet2(_initialState, this);
+		return this.#initialState;
 	}
 	reset() {
 		this.destroy();
@@ -126,22 +112,18 @@ var Query = class extends require_removable.Removable {
 		return !require_utils.timeUntilStale(this.state.dataUpdatedAt, staleTime);
 	}
 	onFocus() {
-		var _classPrivateFieldGet5;
-		const observer = this.observers.find((x) => x.shouldFetchOnWindowFocus());
-		observer === null || observer === void 0 || observer.refetch({ cancelRefetch: false });
-		(_classPrivateFieldGet5 = require_classPrivateFieldSet2._classPrivateFieldGet2(_retryer, this)) === null || _classPrivateFieldGet5 === void 0 || _classPrivateFieldGet5.continue();
+		this.observers.find((x) => x.shouldFetchOnWindowFocus())?.refetch({ cancelRefetch: false });
+		this.#retryer?.continue();
 	}
 	onOnline() {
-		var _classPrivateFieldGet6;
-		const observer = this.observers.find((x) => x.shouldFetchOnReconnect());
-		observer === null || observer === void 0 || observer.refetch({ cancelRefetch: false });
-		(_classPrivateFieldGet6 = require_classPrivateFieldSet2._classPrivateFieldGet2(_retryer, this)) === null || _classPrivateFieldGet6 === void 0 || _classPrivateFieldGet6.continue();
+		this.observers.find((x) => x.shouldFetchOnReconnect())?.refetch({ cancelRefetch: false });
+		this.#retryer?.continue();
 	}
 	addObserver(observer) {
 		if (!this.observers.includes(observer)) {
 			this.observers.push(observer);
 			this.clearGcTimeout();
-			require_classPrivateFieldSet2._classPrivateFieldGet2(_cache, this).notify({
+			this.#cache.notify({
 				type: "observerAdded",
 				query: this,
 				observer
@@ -153,13 +135,13 @@ var Query = class extends require_removable.Removable {
 		if (index !== -1) {
 			this.observers.splice(index, 1);
 			if (!this.observers.length) {
-				if (require_classPrivateFieldSet2._classPrivateFieldGet2(_retryer, this)) {
-					if (require_classPrivateFieldSet2._classPrivateFieldGet2(_abortSignalConsumed, this) || this.state.fetchStatus === "paused" && this.state.status === "pending") require_classPrivateFieldSet2._classPrivateFieldGet2(_retryer, this).cancel({ revert: true });
-					else require_classPrivateFieldSet2._classPrivateFieldGet2(_retryer, this).cancelRetry();
+				if (this.#retryer) {
+					if (this.#abortSignalConsumed || this.state.fetchStatus === "paused" && this.state.status === "pending") this.#retryer.cancel({ revert: true });
+					else this.#retryer.cancelRetry();
 				}
 				this.scheduleGc();
 			}
-			require_classPrivateFieldSet2._classPrivateFieldGet2(_cache, this).notify({
+			this.#cache.notify({
 				type: "observerRemoved",
 				query: this,
 				observer
@@ -170,15 +152,14 @@ var Query = class extends require_removable.Removable {
 		return this.observers.length;
 	}
 	invalidate() {
-		if (!this.state.isInvalidated) require_classPrivateFieldSet2._assertClassBrand(_Query_brand, this, _dispatch).call(this, { type: "invalidate" });
+		if (!this.state.isInvalidated) this.#dispatch({ type: "invalidate" });
 	}
 	async fetch(options, fetchOptions) {
-		var _classPrivateFieldGet7, _context$fetchOptions;
-		if (this.state.fetchStatus !== "idle" && ((_classPrivateFieldGet7 = require_classPrivateFieldSet2._classPrivateFieldGet2(_retryer, this)) === null || _classPrivateFieldGet7 === void 0 ? void 0 : _classPrivateFieldGet7.status()) !== "rejected") {
-			if (this.state.data !== void 0 && (fetchOptions === null || fetchOptions === void 0 ? void 0 : fetchOptions.cancelRefetch)) this.cancel({ silent: true });
-			else if (require_classPrivateFieldSet2._classPrivateFieldGet2(_retryer, this)) {
-				require_classPrivateFieldSet2._classPrivateFieldGet2(_retryer, this).continueRetry();
-				return require_classPrivateFieldSet2._classPrivateFieldGet2(_retryer, this).promise;
+		if (this.state.fetchStatus !== "idle" && this.#retryer?.status() !== "rejected") {
+			if (this.state.data !== void 0 && fetchOptions?.cancelRefetch) this.cancel({ silent: true });
+			else if (this.#retryer) {
+				this.#retryer.continueRetry();
+				return this.#retryer.promise;
 			}
 		}
 		if (options) this.setOptions(options);
@@ -194,7 +175,7 @@ var Query = class extends require_removable.Removable {
 			Object.defineProperty(object, "signal", {
 				enumerable: true,
 				get: () => {
-					require_classPrivateFieldSet2._classPrivateFieldSet2(_abortSignalConsumed, this, true);
+					this.#abortSignalConsumed = true;
 					return abortController.signal;
 				}
 			});
@@ -203,7 +184,7 @@ var Query = class extends require_removable.Removable {
 			const queryFn = require_utils.ensureQueryFn(this.options, fetchOptions);
 			const createQueryFnContext = () => {
 				const queryFnContext = {
-					client: require_classPrivateFieldSet2._classPrivateFieldGet2(_client, this),
+					client: this.#client,
 					queryKey: this.queryKey,
 					meta: this.meta
 				};
@@ -211,7 +192,7 @@ var Query = class extends require_removable.Removable {
 				return queryFnContext;
 			};
 			const queryFnContext = createQueryFnContext();
-			require_classPrivateFieldSet2._classPrivateFieldSet2(_abortSignalConsumed, this, false);
+			this.#abortSignalConsumed = false;
 			if (this.options.persister) return this.options.persister(queryFn, queryFnContext, this);
 			return queryFn(queryFnContext);
 		};
@@ -220,7 +201,7 @@ var Query = class extends require_removable.Removable {
 				fetchOptions,
 				options: this.options,
 				queryKey: this.queryKey,
-				client: require_classPrivateFieldSet2._classPrivateFieldGet2(_client, this),
+				client: this.#client,
 				state: this.state,
 				fetchFn
 			};
@@ -228,146 +209,140 @@ var Query = class extends require_removable.Removable {
 			return context;
 		};
 		const context = createFetchContext();
-		const behavior = require_classPrivateFieldSet2._classPrivateFieldGet2(_queryType, this) === "infinite" ? require_infiniteQueryBehavior.infiniteQueryBehavior(this.options.pages) : this.options.behavior;
-		behavior === null || behavior === void 0 || behavior.onFetch(context, this);
-		require_classPrivateFieldSet2._classPrivateFieldSet2(_revertState, this, this.state);
-		if (this.state.fetchStatus === "idle" || this.state.fetchMeta !== ((_context$fetchOptions = context.fetchOptions) === null || _context$fetchOptions === void 0 ? void 0 : _context$fetchOptions.meta)) {
-			var _context$fetchOptions2;
-			require_classPrivateFieldSet2._assertClassBrand(_Query_brand, this, _dispatch).call(this, {
-				type: "fetch",
-				meta: (_context$fetchOptions2 = context.fetchOptions) === null || _context$fetchOptions2 === void 0 ? void 0 : _context$fetchOptions2.meta
-			});
-		}
-		const retryer = require_classPrivateFieldSet2._classPrivateFieldSet2(_retryer, this, require_retryer.createRetryer({
-			initialPromise: fetchOptions === null || fetchOptions === void 0 ? void 0 : fetchOptions.initialPromise,
+		(this.#queryType === "infinite" ? require_infiniteQueryBehavior.infiniteQueryBehavior(this.options.pages) : this.options.behavior)?.onFetch(context, this);
+		this.#revertState = this.state;
+		if (this.state.fetchStatus === "idle" || this.state.fetchMeta !== context.fetchOptions?.meta) this.#dispatch({
+			type: "fetch",
+			meta: context.fetchOptions?.meta
+		});
+		const retryer = this.#retryer = require_retryer.createRetryer({
+			initialPromise: fetchOptions?.initialPromise,
 			fn: context.fetchFn,
 			onCancel: (error) => {
 				if (error instanceof require_retryer.CancelledError && error.revert) this.setState({
-					...require_classPrivateFieldSet2._classPrivateFieldGet2(_revertState, this),
+					...this.#revertState,
 					fetchStatus: "idle"
 				});
 				abortController.abort();
 			},
 			onFail: (failureCount, error) => {
-				require_classPrivateFieldSet2._assertClassBrand(_Query_brand, this, _dispatch).call(this, {
+				this.#dispatch({
 					type: "failed",
 					failureCount,
 					error
 				});
 			},
 			onPause: () => {
-				require_classPrivateFieldSet2._assertClassBrand(_Query_brand, this, _dispatch).call(this, { type: "pause" });
+				this.#dispatch({ type: "pause" });
 			},
 			onContinue: () => {
-				require_classPrivateFieldSet2._assertClassBrand(_Query_brand, this, _dispatch).call(this, { type: "continue" });
+				this.#dispatch({ type: "continue" });
 			},
 			retry: context.options.retry,
 			retryDelay: context.options.retryDelay,
 			networkMode: context.options.networkMode,
 			canRun: () => true
-		}));
+		});
 		try {
-			var _classPrivateFieldGet8, _classPrivateFieldGet9, _classPrivateFieldGet10, _classPrivateFieldGet11;
 			const data = await retryer.start();
 			if (data === void 0) {
 				if (process.env.NODE_ENV !== "production") console.error(`Query data cannot be undefined. Please make sure to return a value other than undefined from your query function. Affected query key: ${this.queryHash}`);
 				throw new Error(`${this.queryHash} data is undefined`);
 			}
 			this.setData(data);
-			(_classPrivateFieldGet8 = (_classPrivateFieldGet9 = require_classPrivateFieldSet2._classPrivateFieldGet2(_cache, this).config).onSuccess) === null || _classPrivateFieldGet8 === void 0 || _classPrivateFieldGet8.call(_classPrivateFieldGet9, data, this);
-			(_classPrivateFieldGet10 = (_classPrivateFieldGet11 = require_classPrivateFieldSet2._classPrivateFieldGet2(_cache, this).config).onSettled) === null || _classPrivateFieldGet10 === void 0 || _classPrivateFieldGet10.call(_classPrivateFieldGet11, data, this.state.error, this);
+			this.#cache.config.onSuccess?.(data, this);
+			this.#cache.config.onSettled?.(data, this.state.error, this);
 			return data;
 		} catch (error) {
-			var _classPrivateFieldGet12, _classPrivateFieldGet13, _classPrivateFieldGet14, _classPrivateFieldGet15;
 			if (error instanceof require_retryer.CancelledError) {
-				if (error.silent) return require_classPrivateFieldSet2._classPrivateFieldGet2(_retryer, this).promise;
+				if (error.silent) return this.#retryer.promise;
 				else if (error.revert) {
 					if (this.state.data === void 0) throw error;
 					return this.state.data;
 				}
 			}
-			require_classPrivateFieldSet2._assertClassBrand(_Query_brand, this, _dispatch).call(this, {
+			this.#dispatch({
 				type: "error",
 				error
 			});
-			(_classPrivateFieldGet12 = (_classPrivateFieldGet13 = require_classPrivateFieldSet2._classPrivateFieldGet2(_cache, this).config).onError) === null || _classPrivateFieldGet12 === void 0 || _classPrivateFieldGet12.call(_classPrivateFieldGet13, error, this);
-			(_classPrivateFieldGet14 = (_classPrivateFieldGet15 = require_classPrivateFieldSet2._classPrivateFieldGet2(_cache, this).config).onSettled) === null || _classPrivateFieldGet14 === void 0 || _classPrivateFieldGet14.call(_classPrivateFieldGet15, this.state.data, error, this);
+			this.#cache.config.onError?.(error, this);
+			this.#cache.config.onSettled?.(this.state.data, error, this);
 			throw error;
 		} finally {
-			if (require_classPrivateFieldSet2._classPrivateFieldGet2(_retryer, this) === retryer) require_classPrivateFieldSet2._classPrivateFieldSet2(_retryer, this, void 0);
+			if (this.#retryer === retryer) this.#retryer = void 0;
 			this.scheduleGc();
 		}
 	}
-};
-function _dispatch(action) {
-	const reducer = (state) => {
-		switch (action.type) {
-			case "failed": return {
-				...state,
-				fetchFailureCount: action.failureCount,
-				fetchFailureReason: action.error
-			};
-			case "pause": return {
-				...state,
-				fetchStatus: "paused"
-			};
-			case "continue": return {
-				...state,
-				fetchStatus: "fetching"
-			};
-			case "fetch": return {
-				...state,
-				...fetchState(state.data, this.options),
-				fetchMeta: action.meta ?? null
-			};
-			case "success":
-				const newState = {
+	#dispatch(action) {
+		const reducer = (state) => {
+			switch (action.type) {
+				case "failed": return {
 					...state,
-					...successState(action.data, action.dataUpdatedAt),
-					dataUpdateCount: state.dataUpdateCount + 1,
-					...!action.manual && {
-						fetchStatus: "idle",
-						fetchFailureCount: 0,
-						fetchFailureReason: null
-					}
+					fetchFailureCount: action.failureCount,
+					fetchFailureReason: action.error
 				};
-				require_classPrivateFieldSet2._classPrivateFieldSet2(_revertState, this, action.manual ? newState : void 0);
-				return newState;
-			case "error":
-				const error = action.error;
-				return {
+				case "pause": return {
 					...state,
-					error,
-					errorUpdateCount: state.errorUpdateCount + 1,
-					errorUpdatedAt: Date.now(),
-					fetchFailureCount: state.fetchFailureCount + 1,
-					fetchFailureReason: error,
-					fetchStatus: "idle",
-					status: "error",
+					fetchStatus: "paused"
+				};
+				case "continue": return {
+					...state,
+					fetchStatus: "fetching"
+				};
+				case "fetch": return {
+					...state,
+					...fetchState(state.data, this.options),
+					fetchMeta: action.meta ?? null
+				};
+				case "success":
+					const newState = {
+						...state,
+						...successState(action.data, action.dataUpdatedAt),
+						dataUpdateCount: state.dataUpdateCount + 1,
+						...!action.manual && {
+							fetchStatus: "idle",
+							fetchFailureCount: 0,
+							fetchFailureReason: null
+						}
+					};
+					this.#revertState = action.manual ? newState : void 0;
+					return newState;
+				case "error":
+					const error = action.error;
+					return {
+						...state,
+						error,
+						errorUpdateCount: state.errorUpdateCount + 1,
+						errorUpdatedAt: Date.now(),
+						fetchFailureCount: state.fetchFailureCount + 1,
+						fetchFailureReason: error,
+						fetchStatus: "idle",
+						status: "error",
+						isInvalidated: true
+					};
+				case "invalidate": return {
+					...state,
 					isInvalidated: true
 				};
-			case "invalidate": return {
-				...state,
-				isInvalidated: true
-			};
-			case "setState": return {
-				...state,
-				...action.state
-			};
-		}
-	};
-	this.state = reducer(this.state);
-	require_notifyManager.notifyManager.batch(() => {
-		this.observers.slice().forEach((observer) => {
-			observer.onQueryUpdate();
+				case "setState": return {
+					...state,
+					...action.state
+				};
+			}
+		};
+		this.state = reducer(this.state);
+		require_notifyManager.notifyManager.batch(() => {
+			this.observers.slice().forEach((observer) => {
+				observer.onQueryUpdate();
+			});
+			this.#cache.notify({
+				query: this,
+				type: "updated",
+				action
+			});
 		});
-		require_classPrivateFieldSet2._classPrivateFieldGet2(_cache, this).notify({
-			query: this,
-			type: "updated",
-			action
-		});
-	});
-}
+	}
+};
 function fetchState(data, options) {
 	return {
 		fetchFailureCount: 0,

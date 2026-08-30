@@ -1,13 +1,14 @@
-import { replaceEqualDeep, shallowEqualObjects } from "./utils.js";
-import { Subscribable } from "./subscribable.js";
-import { notifyManager } from "./notifyManager.js";
-import { QueryObserver } from "./queryObserver.js";
+Object.defineProperty(exports, Symbol.toStringTag, { value: "Module" });
+const require_utils = require("./utils.cjs");
+const require_subscribable = require("./subscribable.cjs");
+const require_notifyManager = require("./notifyManager.cjs");
+const require_queryObserver = require("./queryObserver.cjs");
 //#region src/queriesObserver.ts
 function difference(array1, array2) {
 	const excludeSet = new Set(array2);
 	return array1.filter((x) => !excludeSet.has(x));
 }
-var QueriesObserver = class extends Subscribable {
+var QueriesObserver = class extends require_subscribable.Subscribable {
 	#client;
 	#result;
 	#queries;
@@ -50,7 +51,7 @@ var QueriesObserver = class extends Subscribable {
 			const queryHashes = queries.map((query) => this.#client.defaultQueryOptions(query).queryHash);
 			if (new Set(queryHashes).size !== queryHashes.length) console.warn("[QueriesObserver]: Duplicate Queries found. This might result in unexpected behavior.");
 		}
-		notifyManager.batch(() => {
+		require_notifyManager.notifyManager.batch(() => {
 			const prevObservers = this.#observers;
 			const newObserverMatches = this.#findMatchingObservers(this.#queries);
 			newObserverMatches.forEach((match) => match.observer.setOptions(match.defaultedQueryOptions));
@@ -61,7 +62,7 @@ var QueriesObserver = class extends Subscribable {
 			const hasStructuralChange = hasLengthChange || hasIndexChange;
 			const hasResultChange = hasStructuralChange ? true : newResult.some((result, index) => {
 				const prev = this.#result[index];
-				return !prev || !shallowEqualObjects(result, prev);
+				return !prev || !require_utils.shallowEqualObjects(result, prev);
 			});
 			if (!hasStructuralChange && !hasResultChange) return;
 			if (hasStructuralChange) {
@@ -128,7 +129,7 @@ var QueriesObserver = class extends Subscribable {
 				this.#lastCombine = combine;
 				this.#lastResult = this.#result;
 				if (queryHashes !== void 0) this.#lastQueryHashes = queryHashes;
-				this.#combinedResult = replaceEqualDeep(this.#combinedResult, combine(input));
+				this.#combinedResult = require_utils.replaceEqualDeep(this.#combinedResult, combine(input));
 			}
 			return this.#combinedResult;
 		}
@@ -151,7 +152,7 @@ var QueriesObserver = class extends Subscribable {
 		const observers = [];
 		queries.forEach((options) => {
 			const defaultedOptions = this.#client.defaultQueryOptions(options);
-			const observer = prevObserversMap.get(defaultedOptions.queryHash)?.shift() ?? new QueryObserver(this.#client, defaultedOptions);
+			const observer = prevObserversMap.get(defaultedOptions.queryHash)?.shift() ?? new require_queryObserver.QueryObserver(this.#client, defaultedOptions);
 			observers.push({
 				defaultedQueryOptions: defaultedOptions,
 				observer
@@ -172,7 +173,7 @@ var QueriesObserver = class extends Subscribable {
 			const shouldSkipCombine = this.#shouldSkipCombine();
 			const previousResult = this.#combinedResult;
 			const newResult = shouldSkipCombine ? previousResult : this.#combineResult(this.#trackResult(this.#result, this.#observerMatches), this.#options?.combine);
-			if (shouldSkipCombine || previousResult !== newResult) notifyManager.batch(() => {
+			if (shouldSkipCombine || previousResult !== newResult) require_notifyManager.notifyManager.batch(() => {
 				this.listeners.forEach((listener) => {
 					listener(this.#result);
 				});
@@ -181,6 +182,6 @@ var QueriesObserver = class extends Subscribable {
 	}
 };
 //#endregion
-export { QueriesObserver };
+exports.QueriesObserver = QueriesObserver;
 
-//# sourceMappingURL=queriesObserver.js.map
+//# sourceMappingURL=queriesObserver.cjs.map

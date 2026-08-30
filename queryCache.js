@@ -1,16 +1,14 @@
-import { i as _classPrivateFieldInitSpec, n as _classPrivateFieldGet2, t as _classPrivateFieldSet2 } from "./classPrivateFieldSet2-CV7wyte-.js";
 import { hashQueryKeyByOptions, matchQuery } from "./utils.js";
 import { Subscribable } from "./subscribable.js";
 import { notifyManager } from "./notifyManager.js";
 import { Query } from "./query.js";
 //#region src/queryCache.ts
-var _queries = /* @__PURE__ */ new WeakMap();
 var QueryCache = class extends Subscribable {
+	#queries;
 	constructor(config = {}) {
 		super();
 		this.config = config;
-		_classPrivateFieldInitSpec(this, _queries, void 0);
-		_classPrivateFieldSet2(_queries, this, /* @__PURE__ */ new Map());
+		this.#queries = /* @__PURE__ */ new Map();
 	}
 	build(client, options, state) {
 		const queryKey = options.queryKey;
@@ -30,8 +28,8 @@ var QueryCache = class extends Subscribable {
 		return query;
 	}
 	add(query) {
-		if (!_classPrivateFieldGet2(_queries, this).has(query.queryHash)) {
-			_classPrivateFieldGet2(_queries, this).set(query.queryHash, query);
+		if (!this.#queries.has(query.queryHash)) {
+			this.#queries.set(query.queryHash, query);
 			this.notify({
 				type: "added",
 				query
@@ -39,10 +37,10 @@ var QueryCache = class extends Subscribable {
 		}
 	}
 	remove(query) {
-		const queryInMap = _classPrivateFieldGet2(_queries, this).get(query.queryHash);
+		const queryInMap = this.#queries.get(query.queryHash);
 		if (queryInMap) {
 			query.destroy();
-			if (queryInMap === query) _classPrivateFieldGet2(_queries, this).delete(query.queryHash);
+			if (queryInMap === query) this.#queries.delete(query.queryHash);
 			this.notify({
 				type: "removed",
 				query
@@ -57,10 +55,10 @@ var QueryCache = class extends Subscribable {
 		});
 	}
 	get(queryHash) {
-		return _classPrivateFieldGet2(_queries, this).get(queryHash);
+		return this.#queries.get(queryHash);
 	}
 	getAll() {
-		return [..._classPrivateFieldGet2(_queries, this).values()];
+		return [...this.#queries.values()];
 	}
 	find(filters) {
 		const defaultedFilters = {

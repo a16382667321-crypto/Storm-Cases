@@ -31,11 +31,10 @@ var InfiniteQueryObserver = class extends QueryObserver {
 		});
 	}
 	createResult(query, options) {
-		var _state$fetchMeta;
 		const { state } = query;
 		const parentResult = super.createResult(query, options);
 		const { isFetching, isRefetching, isError, isRefetchError } = parentResult;
-		const fetchDirection = (_state$fetchMeta = state.fetchMeta) === null || _state$fetchMeta === void 0 || (_state$fetchMeta = _state$fetchMeta.fetchMore) === null || _state$fetchMeta === void 0 ? void 0 : _state$fetchMeta.direction;
+		const fetchDirection = state.fetchMeta?.fetchMore?.direction;
 		const isFetchNextPageError = isError && fetchDirection === "forward";
 		const isFetchingNextPage = isFetching && fetchDirection === "forward";
 		const isFetchPreviousPageError = isError && fetchDirection === "backward";

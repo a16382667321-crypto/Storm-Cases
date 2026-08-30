@@ -3,11 +3,10 @@ const require_utils = require("./utils.cjs");
 //#region src/infiniteQueryBehavior.ts
 function infiniteQueryBehavior(pages) {
 	return { onFetch: (context, query) => {
-		var _context$fetchOptions, _context$state$data, _context$state$data2;
 		const options = context.options;
-		const direction = (_context$fetchOptions = context.fetchOptions) === null || _context$fetchOptions === void 0 || (_context$fetchOptions = _context$fetchOptions.meta) === null || _context$fetchOptions === void 0 || (_context$fetchOptions = _context$fetchOptions.fetchMore) === null || _context$fetchOptions === void 0 ? void 0 : _context$fetchOptions.direction;
-		const oldPages = ((_context$state$data = context.state.data) === null || _context$state$data === void 0 ? void 0 : _context$state$data.pages) || [];
-		const oldPageParams = ((_context$state$data2 = context.state.data) === null || _context$state$data2 === void 0 ? void 0 : _context$state$data2.pageParams) || [];
+		const direction = context.fetchOptions?.meta?.fetchMore?.direction;
+		const oldPages = context.state.data?.pages || [];
+		const oldPageParams = context.state.data?.pageParams || [];
 		let result = {
 			pages: [],
 			pageParams: []
@@ -62,8 +61,7 @@ function infiniteQueryBehavior(pages) {
 			return result;
 		};
 		if (context.options.persister) context.fetchFn = () => {
-			var _context$options$pers, _context$options;
-			return (_context$options$pers = (_context$options = context.options).persister) === null || _context$options$pers === void 0 ? void 0 : _context$options$pers.call(_context$options, fetchFn, {
+			return context.options.persister?.(fetchFn, {
 				client: context.client,
 				queryKey: context.queryKey,
 				meta: context.options.meta,
@@ -78,8 +76,7 @@ function getNextPageParam(options, { pages, pageParams }) {
 	return pages.length > 0 ? options.getNextPageParam(pages[lastIndex], pages, pageParams[lastIndex], pageParams) : void 0;
 }
 function getPreviousPageParam(options, { pages, pageParams }) {
-	var _options$getPreviousP;
-	return pages.length > 0 ? (_options$getPreviousP = options.getPreviousPageParam) === null || _options$getPreviousP === void 0 ? void 0 : _options$getPreviousP.call(options, pages[0], pages, pageParams[0], pageParams) : void 0;
+	return pages.length > 0 ? options.getPreviousPageParam?.(pages[0], pages, pageParams[0], pageParams) : void 0;
 }
 /**
 * Checks if there is a next page.

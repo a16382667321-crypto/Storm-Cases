@@ -1,29 +1,24 @@
-import { i as _classPrivateFieldInitSpec, n as _classPrivateFieldGet2, t as _classPrivateFieldSet2 } from "./classPrivateFieldSet2-CV7wyte-.js";
 import { matchMutation, noop } from "./utils.js";
 import { Subscribable } from "./subscribable.js";
 import { notifyManager } from "./notifyManager.js";
 import { Mutation } from "./mutation.js";
 //#region src/mutationCache.ts
-var _mutations = /* @__PURE__ */ new WeakMap();
-var _scopes = /* @__PURE__ */ new WeakMap();
-var _mutationId = /* @__PURE__ */ new WeakMap();
 var MutationCache = class extends Subscribable {
+	#mutations;
+	#scopes;
+	#mutationId;
 	constructor(config = {}) {
 		super();
 		this.config = config;
-		_classPrivateFieldInitSpec(this, _mutations, void 0);
-		_classPrivateFieldInitSpec(this, _scopes, void 0);
-		_classPrivateFieldInitSpec(this, _mutationId, void 0);
-		_classPrivateFieldSet2(_mutations, this, /* @__PURE__ */ new Set());
-		_classPrivateFieldSet2(_scopes, this, /* @__PURE__ */ new Map());
-		_classPrivateFieldSet2(_mutationId, this, 0);
+		this.#mutations = /* @__PURE__ */ new Set();
+		this.#scopes = /* @__PURE__ */ new Map();
+		this.#mutationId = 0;
 	}
 	build(client, options, state) {
-		var _this$mutationId;
 		const mutation = new Mutation({
 			client,
 			mutationCache: this,
-			mutationId: _classPrivateFieldSet2(_mutationId, this, (_this$mutationId = _classPrivateFieldGet2(_mutationId, this), ++_this$mutationId)),
+			mutationId: ++this.#mutationId,
 			options: client.defaultMutationOptions(options),
 			state
 		});
@@ -31,12 +26,12 @@ var MutationCache = class extends Subscribable {
 		return mutation;
 	}
 	add(mutation) {
-		_classPrivateFieldGet2(_mutations, this).add(mutation);
+		this.#mutations.add(mutation);
 		const scope = scopeFor(mutation);
 		if (typeof scope === "string") {
-			const scopedMutations = _classPrivateFieldGet2(_scopes, this).get(scope);
+			const scopedMutations = this.#scopes.get(scope);
 			if (scopedMutations) scopedMutations.push(mutation);
-			else _classPrivateFieldGet2(_scopes, this).set(scope, [mutation]);
+			else this.#scopes.set(scope, [mutation]);
 		}
 		this.notify({
 			type: "added",
@@ -44,15 +39,15 @@ var MutationCache = class extends Subscribable {
 		});
 	}
 	remove(mutation) {
-		if (_classPrivateFieldGet2(_mutations, this).delete(mutation)) {
+		if (this.#mutations.delete(mutation)) {
 			const scope = scopeFor(mutation);
 			if (typeof scope === "string") {
-				const scopedMutations = _classPrivateFieldGet2(_scopes, this).get(scope);
+				const scopedMutations = this.#scopes.get(scope);
 				if (scopedMutations) {
 					if (scopedMutations.length > 1) {
 						const index = scopedMutations.indexOf(mutation);
 						if (index !== -1) scopedMutations.splice(index, 1);
-					} else if (scopedMutations[0] === mutation) _classPrivateFieldGet2(_scopes, this).delete(scope);
+					} else if (scopedMutations[0] === mutation) this.#scopes.delete(scope);
 				}
 			}
 		}
@@ -64,33 +59,29 @@ var MutationCache = class extends Subscribable {
 	canRun(mutation) {
 		const scope = scopeFor(mutation);
 		if (typeof scope === "string") {
-			const mutationsWithSameScope = _classPrivateFieldGet2(_scopes, this).get(scope);
-			const firstPendingMutation = mutationsWithSameScope === null || mutationsWithSameScope === void 0 ? void 0 : mutationsWithSameScope.find((m) => m.state.status === "pending");
+			const firstPendingMutation = this.#scopes.get(scope)?.find((m) => m.state.status === "pending");
 			return !firstPendingMutation || firstPendingMutation === mutation;
 		} else return true;
 	}
 	runNext(mutation) {
 		const scope = scopeFor(mutation);
-		if (typeof scope === "string") {
-			var _classPrivateFieldGet2$1;
-			const foundMutation = (_classPrivateFieldGet2$1 = _classPrivateFieldGet2(_scopes, this).get(scope)) === null || _classPrivateFieldGet2$1 === void 0 ? void 0 : _classPrivateFieldGet2$1.find((m) => m !== mutation && m.state.isPaused);
-			return (foundMutation === null || foundMutation === void 0 ? void 0 : foundMutation.continue()) ?? Promise.resolve();
-		} else return Promise.resolve();
+		if (typeof scope === "string") return (this.#scopes.get(scope)?.find((m) => m !== mutation && m.state.isPaused))?.continue() ?? Promise.resolve();
+		else return Promise.resolve();
 	}
 	clear() {
 		notifyManager.batch(() => {
-			_classPrivateFieldGet2(_mutations, this).forEach((mutation) => {
+			this.#mutations.forEach((mutation) => {
 				this.notify({
 					type: "removed",
 					mutation
 				});
 			});
-			_classPrivateFieldGet2(_mutations, this).clear();
-			_classPrivateFieldGet2(_scopes, this).clear();
+			this.#mutations.clear();
+			this.#scopes.clear();
 		});
 	}
 	getAll() {
-		return Array.from(_classPrivateFieldGet2(_mutations, this));
+		return Array.from(this.#mutations);
 	}
 	find(filters) {
 		const defaultedFilters = {
@@ -115,8 +106,7 @@ var MutationCache = class extends Subscribable {
 	}
 };
 function scopeFor(mutation) {
-	var _mutation$options$sco;
-	return (_mutation$options$sco = mutation.options.scope) === null || _mutation$options$sco === void 0 ? void 0 : _mutation$options$sco.id;
+	return mutation.options.scope?.id;
 }
 //#endregion
 export { MutationCache };

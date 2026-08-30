@@ -1,17 +1,15 @@
 Object.defineProperty(exports, Symbol.toStringTag, { value: "Module" });
-const require_classPrivateFieldSet2 = require("./classPrivateFieldSet2-Bo0ZyOIv.cjs");
 const require_utils = require("./utils.cjs");
 const require_subscribable = require("./subscribable.cjs");
 const require_notifyManager = require("./notifyManager.cjs");
 const require_query = require("./query.cjs");
 //#region src/queryCache.ts
-var _queries = /* @__PURE__ */ new WeakMap();
 var QueryCache = class extends require_subscribable.Subscribable {
+	#queries;
 	constructor(config = {}) {
 		super();
 		this.config = config;
-		require_classPrivateFieldSet2._classPrivateFieldInitSpec(this, _queries, void 0);
-		require_classPrivateFieldSet2._classPrivateFieldSet2(_queries, this, /* @__PURE__ */ new Map());
+		this.#queries = /* @__PURE__ */ new Map();
 	}
 	build(client, options, state) {
 		const queryKey = options.queryKey;
@@ -31,8 +29,8 @@ var QueryCache = class extends require_subscribable.Subscribable {
 		return query;
 	}
 	add(query) {
-		if (!require_classPrivateFieldSet2._classPrivateFieldGet2(_queries, this).has(query.queryHash)) {
-			require_classPrivateFieldSet2._classPrivateFieldGet2(_queries, this).set(query.queryHash, query);
+		if (!this.#queries.has(query.queryHash)) {
+			this.#queries.set(query.queryHash, query);
 			this.notify({
 				type: "added",
 				query
@@ -40,10 +38,10 @@ var QueryCache = class extends require_subscribable.Subscribable {
 		}
 	}
 	remove(query) {
-		const queryInMap = require_classPrivateFieldSet2._classPrivateFieldGet2(_queries, this).get(query.queryHash);
+		const queryInMap = this.#queries.get(query.queryHash);
 		if (queryInMap) {
 			query.destroy();
-			if (queryInMap === query) require_classPrivateFieldSet2._classPrivateFieldGet2(_queries, this).delete(query.queryHash);
+			if (queryInMap === query) this.#queries.delete(query.queryHash);
 			this.notify({
 				type: "removed",
 				query
@@ -58,10 +56,10 @@ var QueryCache = class extends require_subscribable.Subscribable {
 		});
 	}
 	get(queryHash) {
-		return require_classPrivateFieldSet2._classPrivateFieldGet2(_queries, this).get(queryHash);
+		return this.#queries.get(queryHash);
 	}
 	getAll() {
-		return [...require_classPrivateFieldSet2._classPrivateFieldGet2(_queries, this).values()];
+		return [...this.#queries.values()];
 	}
 	find(filters) {
 		const defaultedFilters = {
