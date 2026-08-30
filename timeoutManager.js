@@ -1,4 +1,3 @@
-import { i as _classPrivateFieldInitSpec, n as _classPrivateFieldGet2, t as _classPrivateFieldSet2 } from "./classPrivateFieldSet2-CV7wyte-.js";
 //#region src/timeoutManager.ts
 const defaultTimeoutProvider = {
 	setTimeout: (callback, delay) => setTimeout(callback, delay),
@@ -6,8 +5,6 @@ const defaultTimeoutProvider = {
 	setInterval: (callback, delay) => setInterval(callback, delay),
 	clearInterval: (intervalId) => clearInterval(intervalId)
 };
-var _provider = /* @__PURE__ */ new WeakMap();
-var _providerCalled = /* @__PURE__ */ new WeakMap();
 /**
 * Allows customization of how timeouts are created.
 *
@@ -20,33 +17,31 @@ var _providerCalled = /* @__PURE__ */ new WeakMap();
 * coalesces timeouts.
 */
 var TimeoutManager = class {
-	constructor() {
-		_classPrivateFieldInitSpec(this, _provider, defaultTimeoutProvider);
-		_classPrivateFieldInitSpec(this, _providerCalled, false);
-	}
+	#provider = defaultTimeoutProvider;
+	#providerCalled = false;
 	setTimeoutProvider(provider) {
 		if (process.env.NODE_ENV !== "production") {
-			if (_classPrivateFieldGet2(_providerCalled, this) && provider !== _classPrivateFieldGet2(_provider, this)) console.error(`[timeoutManager]: Switching provider after calls to previous provider might result in unexpected behavior.`, {
-				previous: _classPrivateFieldGet2(_provider, this),
+			if (this.#providerCalled && provider !== this.#provider) console.error(`[timeoutManager]: Switching provider after calls to previous provider might result in unexpected behavior.`, {
+				previous: this.#provider,
 				provider
 			});
 		}
-		_classPrivateFieldSet2(_provider, this, provider);
-		if (process.env.NODE_ENV !== "production") _classPrivateFieldSet2(_providerCalled, this, false);
+		this.#provider = provider;
+		if (process.env.NODE_ENV !== "production") this.#providerCalled = false;
 	}
 	setTimeout(callback, delay) {
-		if (process.env.NODE_ENV !== "production") _classPrivateFieldSet2(_providerCalled, this, true);
-		return _classPrivateFieldGet2(_provider, this).setTimeout(callback, delay);
+		if (process.env.NODE_ENV !== "production") this.#providerCalled = true;
+		return this.#provider.setTimeout(callback, delay);
 	}
 	clearTimeout(timeoutId) {
-		_classPrivateFieldGet2(_provider, this).clearTimeout(timeoutId);
+		this.#provider.clearTimeout(timeoutId);
 	}
 	setInterval(callback, delay) {
-		if (process.env.NODE_ENV !== "production") _classPrivateFieldSet2(_providerCalled, this, true);
-		return _classPrivateFieldGet2(_provider, this).setInterval(callback, delay);
+		if (process.env.NODE_ENV !== "production") this.#providerCalled = true;
+		return this.#provider.setInterval(callback, delay);
 	}
 	clearInterval(intervalId) {
-		_classPrivateFieldGet2(_provider, this).clearInterval(intervalId);
+		this.#provider.clearInterval(intervalId);
 	}
 };
 const timeoutManager = new TimeoutManager();

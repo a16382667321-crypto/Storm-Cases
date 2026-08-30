@@ -47,7 +47,7 @@ function matchMutation(filters, mutation) {
 	return true;
 }
 function hashQueryKeyByOptions(queryKey, options) {
-	return ((options === null || options === void 0 ? void 0 : options.queryKeyHashFn) || hashKey)(queryKey);
+	return (options?.queryKeyHashFn || hashKey)(queryKey);
 }
 /**
 * Default query & mutation keys hash function.
@@ -161,7 +161,7 @@ function ensureQueryFn(options, fetchOptions) {
 	if (process.env.NODE_ENV !== "production") {
 		if (options.queryFn === skipToken) console.error(`Attempted to invoke queryFn when set to skipToken. This is likely a configuration error. Query hash: '${options.queryHash}'`);
 	}
-	if (!options.queryFn && (fetchOptions === null || fetchOptions === void 0 ? void 0 : fetchOptions.initialPromise)) return () => fetchOptions.initialPromise;
+	if (!options.queryFn && fetchOptions?.initialPromise) return () => fetchOptions.initialPromise;
 	if (!options.queryFn || options.queryFn === skipToken) return () => Promise.reject(/* @__PURE__ */ new Error(`Missing queryFn: '${options.queryHash}'`));
 	return options.queryFn;
 }
@@ -175,7 +175,7 @@ function addConsumeAwareSignal(object, getSignal, onCancelled) {
 	Object.defineProperty(object, "signal", {
 		enumerable: true,
 		get: () => {
-			signal ?? (signal = getSignal());
+			signal ??= getSignal();
 			if (consumed) return signal;
 			consumed = true;
 			if (signal.aborted) onCancelled();
