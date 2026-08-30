@@ -1,22 +1,59 @@
-import express from 'express';
-import authRoutes from './auth';
-import userRoutes from './users';
-import caseRoutes from './cases';
-import inventoryRoutes from './inventory';
-import marketRoutes from './market';
-import chatRoutes from './chat';
-import supportRoutes from './support';
-import adminRoutes from './admin';
+/* istanbul ignore file */
 
-const router = express.Router();
+export { focusManager } from './focusManager'
+export { environmentManager } from './environmentManager'
+export {
+  defaultShouldDehydrateMutation,
+  defaultShouldDehydrateQuery,
+  dehydrate,
+  dehydrateQuery,
+  hydrate,
+} from './hydration'
+export { InfiniteQueryObserver } from './infiniteQueryObserver'
+export { MutationCache } from './mutationCache'
+export type { MutationCacheNotifyEvent } from './mutationCache'
+export { MutationObserver } from './mutationObserver'
+export { defaultScheduler, notifyManager } from './notifyManager'
+export { onlineManager } from './onlineManager'
+export { QueriesObserver } from './queriesObserver'
+export { QueryCache } from './queryCache'
+export type { QueryCacheNotifyEvent } from './queryCache'
+export { QueryClient } from './queryClient'
+export { QueryObserver } from './queryObserver'
+export { CancelledError, isCancelledError } from './retryer'
+export {
+  timeoutManager,
+  type ManagedTimerId,
+  type TimeoutCallback,
+  type TimeoutProvider,
+} from './timeoutManager'
+export {
+  hashKey,
+  isServer,
+  keepPreviousData,
+  matchMutation,
+  matchQuery,
+  noop,
+  partialMatchKey,
+  replaceEqualDeep,
+  shouldThrowError,
+  skipToken,
+} from './utils'
+export type { MutationFilters, QueryFilters, SkipToken, Updater } from './utils'
 
-router.use('/auth', authRoutes);
-router.use('/users', userRoutes);
-router.use('/cases', caseRoutes);
-router.use('/inventory', inventoryRoutes);
-router.use('/market', marketRoutes);
-router.use('/chat', chatRoutes);
-router.use('/support', supportRoutes);
-router.use('/admin', adminRoutes);
+export { streamedQuery as experimental_streamedQuery } from './streamedQuery'
 
-export default router;
+// Types
+export type {
+  DehydratedState,
+  DehydrateOptions,
+  HydrateOptions,
+} from './hydration'
+export { Mutation } from './mutation'
+export type { MutationState } from './mutation'
+export type { MutationCacheConfig } from './mutationCache'
+export type { QueriesObserverOptions } from './queriesObserver'
+export { Query } from './query'
+export type { QueryState } from './query'
+export type { QueryCacheConfig } from './queryCache'
+export * from './types'

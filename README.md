@@ -1,255 +1,145 @@
-# Storm Cases - Telegram Mini App
+# @rolldown/pluginutils [![npm](https://img.shields.io/npm/v/@rolldown/pluginutils.svg)](https://npmx.dev/package/@rolldown/pluginutils)
 
-Telegram бот с Mini App для открытия кейсов, торговли предметами и социального взаимодействия.
+Plugin utilities for [Rolldown](https://rolldown.rs).
 
-## 🚀 Возможности
+Includes regex helpers for plugin hook filters, composable filter expressions, and a helper for filtering out Vite-serve-only plugins.
 
-### Основные функции:
-- 🎰 **Система кейсов** - открывайте кейсы разной редкости (обычные, редкие, легендарные)
-- 📦 **Инвентарь и крафтинг** - управляйте предметами, создавайте новые из существующих
-- 💰 **Рынок** - торговля между игроками, аукционы
-- 💬 **Чат** - общение в реальном времени с сообществом
-- ⚙️ **Настройки** - профиль, техподдержка, ежедневные награды
-
-### Админ функции:
-- 👥 **Управление участниками** - мут, бан, выдача валюты
-- 📋 **Логи активности** - отслеживание действий пользователей
-- 🎧 **Техподдержка** - ответы на запросы пользователей
-- 💰 **Экономика** - управление курсами валют, промокоды
-- 📊 **Аналитика** - статистика и отчеты
-- 🛡️ **Модерация** - управление жалобами и контентом
-
-## 📋 Требования
-
-- Node.js 18+
-- PostgreSQL 12+
-- Redis (опционально, для кэширования)
-- Telegram Bot Token
-
-## 🔧 Установка
-
-### 1. Клонирование и установка зависимостей
+## Install
 
 ```bash
-# Backend
-cd storm-cases/backend
-npm install
-
-# Frontend
-cd storm-cases/frontend
-npm install
+pnpm add -D @rolldown/pluginutils
 ```
 
-### 2. Настройка переменных окружения
+## Usage
 
-Создайте файл `.env` в `backend/`:
-
-```env
-# Telegram Bot
-TELEGRAM_BOT_TOKEN=your_telegram_bot_token
-TELEGRAM_WEBHOOK_URL=https://your-domain.com/webhook
-
-# Server
-PORT=3000
-NODE_ENV=development
-
-# Database
-DATABASE_URL="postgresql://user:password@localhost:5432/stormcases"
-REDIS_URL="redis://localhost:6379"
-
-# JWT
-JWT_SECRET=your-super-secret-jwt-key-change-this
-JWT_EXPIRES_IN=7d
-
-# Admin
-ADMIN_PASSWORD=your-admin-password
-ADMIN_IDS=123456789,987654321
-
-# Mini App
-MINI_APP_URL=http://localhost:5173
+```ts
+import { exactRegex, prefixRegex, makeIdFiltersToMatchWithQuery } from '@rolldown/pluginutils'
 ```
 
-### 3. Настройка базы данных
+All filter helpers are also exposed via the `/filter` subpath:
 
-```bash
-cd storm-cases/backend
-
-# Генерация Prisma Client
-npm run prisma:generate
-
-# Создание миграций
-npm run prisma:migrate
-
-# Заполнение тестовыми данными
-npm run prisma:seed
+```ts
+import { and, or, id, include } from '@rolldown/pluginutils/filter'
 ```
 
-### 4. Запуск проекта
+## Regex helpers
 
-```bash
-# Backend (терминал 1)
-cd storm-cases/backend
-npm run dev
+### `exactRegex`
 
-# Frontend (терминал 2)
-cd storm-cases/frontend
-npm run dev
+- **Type:** `(str: string, flags?: string) => RegExp`
+
+Constructs a `RegExp` that matches the exact string specified. Useful as a plugin hook filter.
+
+```ts
+import { exactRegex } from '@rolldown/pluginutils'
+
+const plugin = {
+  name: 'plugin',
+  resolveId: {
+    filter: { id: exactRegex('foo') },
+    handler(id) {}, // only called for `foo`
+  },
+}
 ```
 
-## 🌐 Развертывание
+### `prefixRegex`
 
-### Backend
+- **Type:** `(str: string, flags?: string) => RegExp`
 
-1. Разверните PostgreSQL базу данных
-2. Установите зависимости: `npm install`
-3. Настройте переменные окружения
-4. Запустите миграции: `npm run prisma:migrate`
-5. Заполните данными: `npm run prisma:seed`
-6. Соберите проект: `npm run build`
-7. Запустите: `npm start`
+Constructs a `RegExp` that matches values starting with the specified prefix.
 
-### Frontend
+```ts
+import { prefixRegex } from '@rolldown/pluginutils'
 
-1. Установите зависимости: `npm install`
-2. Соберите проект: `npm run build`
-3. Разверните `dist/` папку на статический хостинг
-
-### Telegram Bot
-
-1. Установите webhook:
-```bash
-curl -F "url=https://your-domain.com/webhook" \
-  https://api.telegram.org/bot<YOUR_BOT_TOKEN>/setWebhook
+const plugin = {
+  name: 'plugin',
+  resolveId: {
+    filter: { id: prefixRegex('foo') },
+    handler(id) {}, // called for IDs starting with `foo`
+  },
+}
 ```
 
-## 📁 Структура проекта
+### `makeIdFiltersToMatchWithQuery`
 
-```
-storm-cases/
-├── backend/
-│   ├── src/
-│   │   ├── bot/           # Telegram бот
-│   │   ├── config/        # Конфигурация
-│   │   ├── controllers/   # Контроллеры
-│   │   ├── middleware/    # Middleware
-│   │   ├── models/        # Модели данных
-│   │   ├── routes/        # API маршруты
-│   │   ├── services/      # Бизнес-логика
-│   │   ├── types/         # TypeScript типы
-│   │   ├── utils/         # Утилиты
-│   │   └── index.ts       # Точка входа
-│   ├── prisma/
-│   │   ├── schema.prisma  # Схема БД
-│   │   └── seed.ts        # Тестовые данные
-│   └── package.json
-├── frontend/
-│   ├── src/
-│   │   ├── pages/         # Страницы Mini App
-│   │   ├── components/    # React компоненты
-│   │   ├── utils/         # Утилиты
-│   │   ├── App.tsx        # Главный компонент
-│   │   └── main.tsx       # Точка входа
-│   └── package.json
-└── README.md
+- **Type:** `(input: string | RegExp | (string | RegExp)[]) => string | RegExp | (string | RegExp)[]`
+
+Converts an id filter so that it also matches ids that include a query string.
+
+```ts
+import { makeIdFiltersToMatchWithQuery } from '@rolldown/pluginutils'
+
+const plugin = {
+  name: 'plugin',
+  transform: {
+    filter: { id: makeIdFiltersToMatchWithQuery(['**/*.js', /\.ts$/]) },
+    // Matches:
+    //   foo.js, foo.js?foo, foo.txt?foo.js,
+    //   foo.ts, foo.ts?foo, foo.txt?foo.ts
+    handler(code, id) {},
+  },
+}
 ```
 
-## 🔑 Telegram Bot Token
+## Composable filters
 
-1. Найдите [@BotFather](https://t.me/botfather) в Telegram
-2. Отправьте `/newbot`
-3. Следуйте инструкциям для создания бота
-4. Скопируйте токен и добавьте в `.env`
+[Composable filter expressions](https://rolldown.rs/apis/plugin-api/hook-filters#composable-filters) for use cases where a simple `id`/`include`/`exclude` is not enough. For example, when a plugin needs to combine `id`, `moduleType`, `code`, and `query` conditions.
 
-## 🎮 Использование
+```ts
+import { and, code, id, include, interpreter, moduleType, or } from '@rolldown/pluginutils'
 
-1. Найдите вашего бота в Telegram
-2. Отправьте `/start`
-3. Нажмите на кнопку "Открыть Storm Cases"
-4. Используйте Mini App для открытия кейсов, торговли и общения
+const expr = include(and(or(id(/\.tsx?$/), id(/\.jsx?$/)), moduleType('tsx'), code(/import React/)))
 
-## 👨‍💻 Админ панель
-
-1. Откройте настройки в Mini App
-2. Перейдите во вкладку "Админ панель"
-3. Введите админ пароль (из `.env`)
-4. Получите доступ к функциям управления
-
-## 🛠️ API Документация
-
-### Authentication
-- `POST /api/auth/admin-login` - Вход в админ панель
-- `GET /api/auth/verify` - Проверка токена
-
-### Users
-- `GET /api/users/profile` - Профиль пользователя
-- `PUT /api/users/profile` - Обновление профиля
-- `POST /api/users/daily-reward` - Ежедневная награда
-- `POST /api/users/refer` - Реферальная система
-
-### Cases
-- `GET /api/cases` - Список кейсов
-- `GET /api/cases/:id` - Детали кейса
-- `POST /api/cases/:id/open` - Открыть кейс
-- `POST /api/cases/battle` - Боевой режим
-
-### Inventory
-- `GET /api/inventory` - Инвентарь
-- `POST /api/inventory/craft` - Крафтинг
-- `POST /api/inventory/upgrade` - Апгрейд предмета
-- `PUT /api/inventory/:id/favorite` - Избранное
-
-### Market
-- `GET /api/market/listings` - Список объявлений
-- `POST /api/market/list` - Создать объявление
-- `POST /api/market/buy/:id` - Купить предмет
-- `DELETE /api/market/listings/:id` - Удалить объявление
-- `POST /api/market/auctions/:id/bid` - Ставка на аукционе
-
-### Chat
-- `GET /api/chat/history` - История чата
-- `POST /api/chat/report` - Пожаловаться на сообщение
-- `GET /api/chat/online` - Онлайн пользователи
-- `POST /api/chat/:id/react` - Реакция на сообщение
-
-### Support
-- `GET /api/support/tickets` - Тикеты пользователя
-- `POST /api/support/tickets` - Создать тикет
-- `POST /api/support/tickets/:id/respond` - Ответить на тикет
-- `GET /api/support/tickets/:id` - Детали тикета
-- `PUT /api/support/tickets/:id/close` - Закрыть тикет
-
-### Admin
-- `GET /api/admin/users` - Список пользователей
-- `GET /api/admin/users/:id` - Детали пользователя
-- `PUT /api/admin/users/:id/mute` - Мьют пользователя
-- `PUT /api/admin/users/:id/unmute` - Размьют
-- `PUT /api/admin/users/:id/ban` - Бан пользователя
-- `PUT /api/admin/users/:id/unban` - Разбан
-- `PUT /api/admin/users/:id/balance` - Выдать баланс
-- `GET /api/admin/logs` - Логи системы
-- `GET /api/admin/support/tickets` - Тикеты поддержки
-- `POST /api/admin/support/tickets/:id/respond` - Ответ на тикет
-- `GET /api/admin/economy/rates` - Курсы валют
-- `POST /api/admin/economy/promocodes` - Создать промокод
-- `GET /api/admin/analytics/stats` - Статистика
-- `GET /api/admin/moderation/reports` - Жалобы
-
-## 🧪 Тестирование
-
-```bash
-# Backend тесты
-cd backend
-npm test
-
-# Frontend тесты
-cd frontend
-npm test
+interpreter(expr, sourceCode, sourceId, 'tsx') // boolean
 ```
 
-## 📝 Лицензия
+### Builders
+
+| Builder                        | Description                                                                                                                                              |
+| ------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `and(...exprs)`                | All operands must match.                                                                                                                                 |
+| `or(...exprs)`                 | At least one operand must match.                                                                                                                         |
+| `not(expr)`                    | Negates the operand.                                                                                                                                     |
+| `id(pattern, params?)`         | Match the module id. `pattern` is `string` or `RegExp`. `params.cleanUrl` strips the query/hash before matching.                                         |
+| `importerId(pattern, params?)` | Match the importer's id. Same shape as `id`.                                                                                                             |
+| `moduleType(type)`             | Match Rolldown's module type (`'js'`, `'jsx'`, `'ts'`, `'tsx'`, `'json'`, `'text'`, `'base64'`, `'dataurl'`, `'binary'`, `'empty'`, or a custom string). |
+| `code(pattern)`                | Match the module source. `string` matches with `includes`; `RegExp` with `test`.                                                                         |
+| `query(key, pattern)`          | Match a single query parameter. `pattern` is `boolean` (key presence/truthiness), `string` (exact value), or `RegExp` (value pattern).                   |
+| `queries(obj)`                 | Shorthand for `and(...)` over multiple `query` entries.                                                                                                  |
+| `include(expr)`                | Top-level wrapper marking `expr` as an inclusion rule.                                                                                                   |
+| `exclude(expr)`                | Top-level wrapper marking `expr` as an exclusion rule.                                                                                                   |
+
+### `interpreter`
+
+- **Type:** `(exprs, code?, id?, moduleType?, importerId?) => boolean`
+
+Evaluates one or more top-level expressions against the given inputs. Returns `true` when at least one `include` matches and no `exclude` matches; when no `include` is present, defaults to `true` unless an `exclude` matches.
+
+The argument required by each expression must be provided. For example, evaluating an `id(...)` expression without passing `id` will throw.
+
+## `filterVitePlugins`
+
+- **Type:** `<T>(plugins: T | T[] | null | undefined | false) => T[]`
+
+Removes Vite plugins that target the dev server (`apply: 'serve'`) from a (possibly nested) plugin array. Plugins whose `apply` is a function are invoked with a `command: 'build'` context to decide. Useful when reusing a Vite plugin array inside a Rolldown config.
+
+```ts
+import { defineConfig } from 'rolldown'
+import { filterVitePlugins } from '@rolldown/pluginutils'
+import viteReact from '@vitejs/plugin-react'
+
+export default defineConfig({
+  plugins: filterVitePlugins([
+    viteReact(),
+    {
+      name: 'dev-only',
+      apply: 'serve', // filtered out
+      // ...
+    },
+  ]),
+})
+```
+
+## License
 
 MIT
-
-## 🤝 Поддержка
-
-Для вопросов и поддержки используйте техподдержку в Mini App или создайте issue в репозитории.
